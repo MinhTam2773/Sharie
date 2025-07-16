@@ -8,12 +8,25 @@ const userSchema = new mongoose.Schema({
     username: {
         type: String,
         unique: true,
-        required: true
+        required: true,
+        minlength: [1,"Name must contain at least 1 letter"],
+        trim: true,
+        validate: {
+            validator: (value) => !/\s/.test(value),
+            message: "Username must not contain spaces"
+        }
+
     },
     email: {
         type: String,
         unique: true,
-        required: true
+        required: true,
+        validate: {
+            validator: function (value) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value); // basic email regex
+            },
+            message: (props) => `${props.value} is not a valid email address`
+        }
     },
     bio: {
         type: String,
