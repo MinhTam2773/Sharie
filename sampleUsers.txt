@@ -1,0 +1,16 @@
+email: bimbim@email.com
+password: 277353
+
+{
+    "username":"cotlon",
+    "email":"cotanlon@gmail.com",
+    "password":"cotlon",
+    "gender":"Male"
+}
+
+{
+    "username":"minhtamdeptrai",
+    "email":"minhtamdeptrai@gmail.com",
+    "password":"minhtam",
+    "gender":"Male"
+}

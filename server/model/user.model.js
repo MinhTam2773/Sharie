@@ -53,10 +53,15 @@ const userSchema = new mongoose.Schema({
         enum: ["Male", "Female"],
         required: true
     },
-    likedByPeople: {
-        type: Number,
-        required: true,
-        default: 0
+    following: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'User',
+        default: []
+    },
+    followers: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'User',
+        default: []
     },
     postCount: {
         type: Number,
