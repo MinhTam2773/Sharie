@@ -6,9 +6,12 @@ import { connectDB } from './db/db.js'
 import authRouter from './routes/auth.route.js'
 import userRouter from './routes/user.route.js'
 import postRouter from './routes/post.route.js'
+import commentRouter from './routes/comment.route.js'
+import chatRouter from './routes/chat.route.js'
+import messageRouter from './routes/message.route.js'
+import { app, io, server } from './lib/socket.js'
 
 dotenv.config()
-const app = express()
 const PORT = process.env.PORT || 5000
 
 //middleware
@@ -23,9 +26,12 @@ app.use(cors({
 app.use('/api/auth', authRouter)
 app.use('/api/users', userRouter)
 app.use('/api/posts', postRouter)
+app.use('/api/comments', commentRouter)
+app.use('/api/chats', chatRouter)
+app.use('/api/messages', messageRouter)
 
 //db
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     connectDB()
     console.log('connected at http://localhost:' + PORT)
 })

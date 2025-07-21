@@ -1,5 +1,6 @@
 import Post from "../model/post.model.js";
 import User from "../model/user.model.js";
+import { sendNotification } from "../lib/utils.js";
 
 export const uploadNewPost = async (req, res) => {
     try {
@@ -21,6 +22,8 @@ export const uploadNewPost = async (req, res) => {
         if (!newPost) {
             return res.status(401).json({ success: false, message: 'controller/uploadNewPost: cant create new post' })
         }
+
+        await sendNotification(userId,null, 'post', 'Post uploaded successfully')
 
         res.status(200).json({ success: true, message: 'post uploaded successfully', newPost })
     } catch (err) {

@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema({
     uid: {
         type: String,
-        required: false
     },
     username: {
         type: String,
@@ -68,18 +67,10 @@ const userSchema = new mongoose.Schema({
         default: 0,
         required: true
     },
-    createdAt: {
-        type: Date,
-        default: Date.now(),
-        required: true
-    },
-    updatedAt: {
-        type: Date
-    },
     refreshToken: {
         type: String,
     }
-})
+}, {timestamps: true})
 
 
 const User = mongoose.model("User", userSchema)
