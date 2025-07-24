@@ -1,4 +1,5 @@
 import Chat from "../model/chat.model.js";
+import { sendNotification } from "../lib/utils.js";
 
 export const createGroupChat = async (req, res) => {
     try {

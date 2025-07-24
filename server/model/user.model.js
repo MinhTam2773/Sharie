@@ -37,20 +37,7 @@ const userSchema = new mongoose.Schema({
     },
     avatar: {
         type: String,
-        default: function () {
-            if (!this.avatar) {
-                if (this.gender === 'Male') {
-                    return 'https://static.vecteezy.com/system/resources/thumbnails/001/840/612/small/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg'
-                } else if (this.gender === 'Female') {
-                    return 'https://cdn.vectorstock.com/i/1000v/14/18/default-female-avatar-profile-picture-icon-grey-vector-34511418.jpg'
-                }
-            }
-        }
-    },
-    gender: {
-        type: String,
-        enum: ["Male", "Female"],
-        required: true
+        default: 'https://static.vecteezy.com/system/resources/thumbnails/001/840/612/small/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg'
     },
     following: {
         type: [mongoose.Schema.Types.ObjectId],
@@ -72,6 +59,6 @@ const userSchema = new mongoose.Schema({
     }
 }, {timestamps: true})
 
-
 const User = mongoose.model("User", userSchema)
+
 export default User
