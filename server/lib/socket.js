@@ -11,8 +11,13 @@ const io = new Server(server, {
     }
 }) 
 
-export function getReceiverSocketId(userId) {
-    return userSocketMap[userId]
+export function getReceiverSocketId(userIds) {
+    let receiverSocketIds = []
+    userIds.forEach((userId) => {
+        const receiverSocketId = userSocketMap[userId]
+        receiverSocketIds.push(receiverSocketId)
+    });
+    return receiverSocketIds
 }
 
 const userSocketMap = {} //{userId: socketId}

@@ -1,12 +1,19 @@
 import { create } from 'zustand'
+import { io } from "socket.io-client";
 
-export const useAuthStore = create((set) => ({
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
+export const useAuthStore = create((set, get) => ({
     accessToken: null,
+    user: null,
+    socket: null,
     isLogging: false,
     isSignignIn: false,
     isVerifyingCode: false,
     isCheckingUser: false,
     isLoggingOut: false,
+    isGettingCurrentUser: false,
+    isGettingTargetUser: false,
 
     login: async (form) => {
         try {
@@ -182,6 +189,75 @@ export const useAuthStore = create((set) => ({
         } finally {
             set({isLoggingOut: false})
         }
+    },
+    getCurrentUser: async () => {
+        try{
+            const {accessToken} = get()
+            set({isGettingCurrentUser: true})
+
+            const res = await fetch('/api/users/me', {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            })
+
+            if (!res.ok) {
+                const error = await res.json()
+                return {success: false, message: error.message}
+            }
+
+            const data = await res.json()
+            set ({user: data.user})
+            return {success: true, message: data.message}
+        } catch(e) {
+            console.error(e)
+        }
+    },
+    getTargetUser: async (id) => {
+        try {
+            set({isGettingTargetUser: true})
+
+            const res = await fetch(`/api/users/${id}`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${get().accessToken}`
+                }
+            })
+
+            if (!res.ok) {
+                const error = await res.json()
+                return {success: false, message: error.message}
+            }
+            
+            const data = await res.json()
+            return {success: true, message: data.message, user: data.user }
+        } catch(e) {
+            console.error(e)
+        } finally {
+            set({isGettingTargetUser: false})
+        }
+    },
+    connectSocket: () => {
+        const {accessToken, user} = get()
+        if (!accessToken) return
+
+        try {
+            const socket = io(BASE_URL, {
+                query: {
+                    userId: user._id
+                }
+            })
+            socket.connect()
+    
+            set({socket: socket})
+            console.log('socket connected')
+        } catch(e) {
+            console.error(e)
+        }
+    },
+    disconnectSocket: () => {
+        if (get().socket?.connected) get().socket.disconnect()
     }
 }))
 

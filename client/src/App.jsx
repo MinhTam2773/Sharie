@@ -6,11 +6,12 @@ import HomePage from './pages/HomePage'
 import Background from './components/Background'
 import { useAuthStore } from './store/authStore'
 import SignInPage from './pages/SignInPage'
+import SearchResultPage from './pages/SearchResultPage'
 
 const App = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { accessToken, generateToken } = useAuthStore()
+  const { accessToken, generateToken, getCurrentUser, connectSocket } = useAuthStore()
 
   useEffect(() => {
     if (location.pathname.includes('/login') || 
@@ -21,11 +22,14 @@ const App = () => {
         await generateToken()
         if (!useAuthStore.getState().accessToken) {
           navigate('/login')
+          return
         }
       }
+      await getCurrentUser()
+      await connectSocket()
     }
     checkToken()
-  }, [accessToken, navigate, generateToken, location])
+  }, [accessToken, navigate, generateToken, location, getCurrentUser, connectSocket])
 
   return (
     <div>
@@ -35,6 +39,7 @@ const App = () => {
         <Route path='/' element={<HomePage />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/signin' element={<SignInPage />} />
+        <Route path='/search/:query' element={<SearchResultPage/>} />
       </Routes>
 
 

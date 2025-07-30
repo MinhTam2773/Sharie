@@ -39,6 +39,7 @@ export const sendEmail = async (to , code) => {
             html
         })
         return {success: true, message: 'code sent successfully'}
+        
     } catch (e) {
         return {success: false, message: `utils/sendEmail: ${e.message}`}
     }

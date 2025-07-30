@@ -24,6 +24,9 @@ const chatSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    groupAvatar: {
+        type: String,
+    },
     name: {
         type: String,
         trim: true
