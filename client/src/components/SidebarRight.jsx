@@ -44,7 +44,7 @@ const SidebarRight = () => {
   if (isLoadingChats && !user) return <SideBarRightLoading />
 
   return (
-    <aside className="fixed top-16 right-0 h-[calc(100vh-4rem)] w-80 bg-gradient-to-b from-purple-950 to-indigo-950 border-l border-purple-500/20 shadow-xl overflow-y-auto">
+    <aside className="fixed top-16 right-0 h-[calc(100vh-4rem)] w-80 overflow-y-auto">
       {chats.length === 0 && (
         <div className="p-4 text-center text-gray-400">No chats available</div>
       )}
@@ -64,7 +64,7 @@ const SidebarRight = () => {
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') setSelectedChat(chat)
             }}
-            className="flex items-center gap-3 p-3 cursor-pointer hover:bg-purple-700 transition rounded-md"
+            className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-700 transition rounded-md"
           >
             <img
               src={chatImage}

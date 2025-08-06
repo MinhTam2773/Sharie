@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { MediaSchema } from "./media.model.js";
 
 const commentSchema = new mongoose.Schema({
     postId: {
@@ -6,7 +7,7 @@ const commentSchema = new mongoose.Schema({
         ref: 'Post',
         required: true
     },
-    commentorId: {
+    commentor: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
@@ -15,9 +16,7 @@ const commentSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
-    mediaUrl: {
-        type: String
-    },
+    media: [MediaSchema], //array of media objects
     likedBy: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

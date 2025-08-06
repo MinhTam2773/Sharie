@@ -11,7 +11,7 @@ import SearchResultPage from './pages/SearchResultPage'
 const App = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { accessToken, generateToken, getCurrentUser, connectSocket } = useAuthStore()
+  const { accessToken, generateToken, getCurrentUser, connectSocket} = useAuthStore()
 
   useEffect(() => {
     if (location.pathname.includes('/login') || 

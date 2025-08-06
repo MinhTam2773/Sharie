@@ -251,7 +251,6 @@ export const useAuthStore = create((set, get) => ({
             socket.connect()
     
             set({socket: socket})
-            console.log('socket connected')
         } catch(e) {
             console.error(e)
         }

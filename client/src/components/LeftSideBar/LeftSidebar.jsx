@@ -3,9 +3,9 @@ import CurrentUserCard from './CurrentUserCard'
 
 const LeftSidebar = () => {
   return (
-    <div>LeftSidebar
+    <aside>
     <CurrentUserCard/>
-    </div>
+    </aside>
   )
 }
 

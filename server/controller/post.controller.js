@@ -14,7 +14,7 @@ export const uploadNewPost = async (req, res) => {
         }
 
         const newPost = await Post.create({
-            authorId: userId,
+            author: userId,
             caption,
             mediaType,
             mediaUrl
@@ -54,10 +54,9 @@ export const getPostsFromFollowing = async (req, res) => {
             return res.status(401).json({ success: false, message: "controller/getPostsFromFollowing: user not found" })
         }
 
-        const posts = await Post.find()
-        const postsFromFollowing = posts.filter((post) => currentUser.following.includes(post.authorId))
+        const posts = await Post.find({ author: { $in: currentUser.following } }).populate('author', 'avatar username')
 
-        res.status(200).json({ success: true, message: "get posts from following successfully", postsFromFollowing })
+        res.status(200).json({ success: true, message: "get posts from following successfully", posts })
     } catch (err) {
         res.status(400).json({ success: false, message: `controller/getPostsFromFollowing: ${err.message}` })
     }
