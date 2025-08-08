@@ -33,7 +33,7 @@ export const uploadComment = async (req, res) => {
 
         const newComment = await Comment.create({
             postId,
-            commentorId: currentUserId,
+            commentor: currentUserId,
             text,
             media: mediaUrls
         })

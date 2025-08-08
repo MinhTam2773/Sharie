@@ -11,24 +11,30 @@ import SearchResultPage from './pages/SearchResultPage'
 const App = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { accessToken, generateToken, getCurrentUser, connectSocket} = useAuthStore()
+  const { accessToken, generateToken, getCurrentUser, connectSocket } = useAuthStore()
 
   useEffect(() => {
-    if (location.pathname.includes('/login') || 
+    if (location.pathname.includes('/login') ||
       location.pathname.includes('/signin')) return
-      
-    const checkToken = async () => {
-      if (!accessToken) {
-        await generateToken()
-        if (!useAuthStore.getState().accessToken) {
-          navigate('/login')
-          return
-        }
+
+    const getToken = async () => {
+      await generateToken()
+      if (!useAuthStore.getState().accessToken) {
+        navigate('/login')
       }
-      await getCurrentUser()
-      await connectSocket()
     }
-    checkToken()
+    getToken()
+    
+    const intervalId = setInterval(async () => {
+      await generateToken()
+      if (!useAuthStore.getState().accessToken) {
+        clearInterval(intervalId)
+        navigate('/login')
+        return
+      }
+    }, 1000 * 60 * 12)
+
+    return () => clearInterval(intervalId)
   }, [accessToken, navigate, generateToken, location, getCurrentUser, connectSocket])
 
   return (
@@ -39,7 +45,7 @@ const App = () => {
         <Route path='/' element={<HomePage />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='/signin' element={<SignInPage />} />
-        <Route path='/search/:query' element={<SearchResultPage/>} />
+        <Route path='/search/:query' element={<SearchResultPage />} />
       </Routes>
 
 

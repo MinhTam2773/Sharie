@@ -1,15 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { forwardRef, useEffect, useRef, useState } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'
 import { FaPaperclip } from 'react-icons/fa'
 import { usePostStore } from '../../store/postStore'
 import { MdClose } from 'react-icons/md'
 
-const CurrentUserCard = () => {
-    const { user, isGettingCurrentUser } = useAuthStore()
-    const { uploadPost } = usePostStore()
 
-    const [isOpen, setIsOpen] = useState(false)
+const ShareModal = forwardRef(({ originalPost, setIsSharing }, ref) => {
+    const { user, isGettingCurrentUser } = useAuthStore()
+    const { sharePost } = usePostStore()
+
     const [caption, setCaption] = useState('')
     const [mediaPreviews, setMediaPreviews] = useState([])
     const uploadPostRef = useRef(null)
@@ -43,14 +43,15 @@ const CurrentUserCard = () => {
         setMediaPreviews(prev => prev.filter((_, i) => i !== index))
     }
 
-    const handleUploadPost = async (e) => {
+    const handleSharePost = async (e) => {
         e.preventDefault()
 
         const postData = { caption, media: mediaPreviews }
-        const { success } = await uploadPost(postData)
+        const { success, message } = await sharePost(originalPost._id, postData)
+        console.log(message)
         if (!success) return
 
-        setIsOpen(false)
+        setIsSharing(false)
         setCaption('')
         setMediaPreviews([])
     }
@@ -58,7 +59,7 @@ const CurrentUserCard = () => {
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (uploadPostRef.current && !uploadPostRef.current.contains(e.target)) {
-                setIsOpen(false)
+                setIsSharing(false)
             }
         }
         document.addEventListener('mousedown', handleClickOutside)
@@ -68,51 +69,45 @@ const CurrentUserCard = () => {
     if (isGettingCurrentUser && !user) return <p>Loading...</p>
 
     return (
-        <div className="w-2/11 p-4 fixed">
-            {user && (
-                <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-md p-6 flex flex-col items-center">
-                    <img src={user.avatar} alt="avatar" className="w-20 h-20 rounded-full object-cover shadow" />
-                    <p className="font-semibold text-lg mt-2">{user.username}</p>
-                    <p className="text-gray-500 text-sm text-center mt-3 bg-amber-50 px-3 py-2 rounded-2xl">
-                        {user.bio}
-                    </p>
-                    <button
-                        onClick={() => setIsOpen(true)}
-                        className="mt-7 bg-gradient-to-r from-purple-500 to-indigo-500 hover:opacity-90 text-white px-5 py-2 rounded-full transition"
-                    >
-                        Upload Post
-                    </button>
-                </div>
-            )}
-
-            {isOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-100">
+        <div className='fixed inset-0 flex justify-center items-center bg-black/50 backdrop-blur-sm z-50'>
+            <div ref={ref} className=' rounded-xl w-full max-w-lg p-6 relative flex flex-col'>
+                <div>
                     <form
                         ref={uploadPostRef}
-                        onSubmit={handleUploadPost}
+                        onSubmit={handleSharePost}
                         className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg w-full max-w-lg p-6 relative"
                     >
+                        {/* avatar and username */}
                         <div className="flex items-center gap-3 mb-4">
                             <img src={user.avatar} className="w-10 h-10 rounded-full object-cover" />
                             <span className="font-medium text-gray-800 dark:text-white">{user.username}</span>
                         </div>
 
+                        {/* caption */}
                         <textarea
                             value={caption}
                             onChange={(e) => setCaption(e.target.value)}
                             placeholder="What's going on inside your head?"
-                            rows={mediaPreviews.length > 0 ? 3 : 6}
-                            className="w-full p-3 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                            className="w-full p-3 text-sm rounded-md focus:outline-none resize-none overflow-y-auto"
+                            style={{ 
+                                minHeight: '10',
+                                maxHeight: '8rem'
+                             }} // ~40px (short default)
+                            // onInput={(e) => {
+                            //     e.target.style.height = 'auto';
+                            //     e.target.style.height = `${e.target.scrollHeight}px`;
+                            // }}
                         />
 
+                        {/* media */}
                         {mediaPreviews.length > 0 && (
                             <div className="gap-3 pb-2 mt-2 flex overflow-x-auto">
                                 {mediaPreviews.map((preview, index) => (
                                     <div key={index} className="relative group flex">
                                         {preview.type === 'image' ? (
-                                            <img src={preview.preview} className="h-70 w-auto max-w-xs object-contain rounded-md" />
+                                            <img src={preview.preview} className="h-50 w-auto max-w-xs object-contain rounded-md" />
                                         ) : (
-                                            <video src={preview.preview} controls className="h-70 w-auto max-w-xs object-contain rounded-md" />
+                                            <video src={preview.preview} controls className="h-50 w-auto max-w-xs object-contain rounded-md" />
                                         )}
                                         <button
                                             type="button"
@@ -125,6 +120,44 @@ const CurrentUserCard = () => {
                                 ))}
                             </div>
                         )}
+                        <div className='border rounded-2xl p-2'>
+                            {/* username  */}
+                            <div className='flex gap-3 p-3'>
+                                <img src={originalPost.author.avatar} alt={`${originalPost.author.username}'s avatar`} className='h-10 w-10 rounded-full' />
+                                <p className='font-semibold'>{originalPost.author.username}</p>
+                            </div>
+
+                            {/* caption */}
+                            {originalPost.caption && (
+                                <div className='px-3 text-lg'>
+                                    <p>{originalPost.caption}</p>
+                                </div>)}
+
+                            {/* media */}
+                            <div>
+                                {originalPost.media.length > 0 && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 p-3">
+                                        {originalPost.media.map((media, index) => (
+                                            <div key={index} className="relative rounded-lg overflow-hidden bg-black">
+                                                {media.mediaType === 'image' ? (
+                                                    <img
+                                                        src={media.mediaUrl}
+                                                        alt={`media-${index}`}
+                                                        className="w-full h-30 object-cover hover:scale-105 transition-transform duration-300"
+                                                    />
+                                                ) : (
+                                                    <video
+                                                        src={media.mediaUrl}
+                                                        controls
+                                                        className="w-full h-30 object-cover"
+                                                    />
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
                         <input
                             type="file"
@@ -133,7 +166,6 @@ const CurrentUserCard = () => {
                             onChange={handleMediaPreview}
                             multiple
                         />
-
                         <div className="flex justify-between items-center mt-4">
                             <button
                                 type="button"
@@ -146,7 +178,7 @@ const CurrentUserCard = () => {
                             <div className="space-x-2">
                                 <button
                                     type="button"
-                                    onClick={() => setIsOpen(false)}
+                                    onClick={() => setIsSharing(false)}
                                     className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-800 rounded-md"
                                 >
                                     Cancel
@@ -155,15 +187,15 @@ const CurrentUserCard = () => {
                                     type="submit"
                                     className="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium"
                                 >
-                                    Upload
+                                    Share
                                 </button>
                             </div>
                         </div>
                     </form>
                 </div>
-            )}
+            </div>
         </div>
     )
-}
+})
 
-export default CurrentUserCard
+export default ShareModal

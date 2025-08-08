@@ -5,11 +5,10 @@ import { MdClose } from 'react-icons/md'
 import toast from 'react-hot-toast'
 import { PiPaperPlaneRightFill } from "react-icons/pi";
 import { usePostStore } from '../../store/postStore'
-import { getCommentsByPost } from '../../../../server/controller/comment.controller'
 
 const CommentInput = ({ postId , setComments}) => {
   const { user } = useAuthStore()
-  const { uploadComment } = usePostStore()
+  const { uploadComment, getCommentsByPost } = usePostStore()
 
   const [text, setText] = useState('')
   const [media, setMedia] = useState([])
@@ -47,9 +46,7 @@ const CommentInput = ({ postId , setComments}) => {
   const handleUploadComment = async () => {
     if (!text.trim() && media.length == 0) return
 
-    const {success, message} = await uploadComment(postId, {text, media})
-    console.log(message)
-    if (!success) return
+    await uploadComment(postId, {text, media})
 
     const {comments} = await getCommentsByPost(postId)
     setComments(comments)
@@ -59,7 +56,7 @@ const CommentInput = ({ postId , setComments}) => {
   }
 
   return (
-    <div className="flex gap-2 pl-3 mr-3">
+    <div className="flex gap-2 pl-3 mr-3 pt-3">
       <img src={user.avatar} alt={user.username} className="rounded-full h-9 w-9" />
 
       <div className="bg-gray-600 rounded-xl w-full flex flex-col gap-2 p-3">
@@ -121,6 +118,7 @@ const CommentInput = ({ postId , setComments}) => {
             <PiPaperPlaneRightFill
               className={`${!text.trim() && media?.length === 0 ? 'disabled' : 'fill-blue-400 cursor-pointer'} `}
               onClick={handleUploadComment}
+              size={20}
             />
           </button>
         </div>

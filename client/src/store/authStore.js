@@ -48,6 +48,8 @@ export const useAuthStore = create((set, get) => ({
     },
     generateToken: async () => {
         try {
+            await get().disconnectSocket()
+
             const res = await fetch('/api/auth/refresh', {
                 method: 'POST',
                 credentials: 'include'
@@ -60,6 +62,12 @@ export const useAuthStore = create((set, get) => ({
 
             const data = await res.json()
             set({ accessToken: data.accessToken })
+
+            if (data.success) {
+                await get().getCurrentUser()
+                await get().connectSocket()
+            }
+
             return data.accessToken
         } catch (e) {
             console.error(e)

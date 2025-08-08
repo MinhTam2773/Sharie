@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { MediaSchema } from "./media.model.js";
 
 const postSchema = new mongoose.Schema({
     author: {
@@ -10,13 +11,7 @@ const postSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
-    mediaUrl: {
-        type: String
-    },
-    mediaType: {
-        type: String,
-        enum: ["image", "video"],
-    },
+    media: [MediaSchema],
     likes: {
         type: [mongoose.Schema.Types.ObjectId],
         default: []

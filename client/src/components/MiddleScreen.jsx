@@ -12,10 +12,10 @@ const MiddleScreen = () => {
     }
   },[accessToken, getPostsFromFollowing] )
 
-  if (loadingPosts && posts.length == 0) return <p>Loading...</p>
+  if (loadingPosts) return <p>Loading...</p>
 
   return (
-    <div className='w-full flex flex-col justify-center'>
+    <div className='w-full flex flex-col justify-center gap-5 mt-5'>
       {posts.length > 0 && posts.map(post => (
         <Post key={post._id} post={post}/>
         ))}

@@ -29,7 +29,7 @@ export const usePostStore = create((set, get) => ({
             }
 
             const data = await res.json()
-            set({ posts: [data.post, ...get().posts] })
+            set({ posts: [data.newPost, ...get().posts] })
             return { success: true, message: data.message }
         } catch (e) {
             console.error(e)
@@ -142,7 +142,7 @@ export const usePostStore = create((set, get) => ({
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
-                    'Content-Type':'application/json'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(formData)
             })
@@ -159,6 +159,29 @@ export const usePostStore = create((set, get) => ({
             console.error(e)
         } finally {
             set({ isUploadingComment: false })
+        }
+    },
+    sharePost: async (postId, formData) => {
+        try {
+            const res = await fetch(`/api/posts/share/${postId}`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Beare ${useAuthStore.getState().accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+
+            if (!res.ok) {
+                const error = await res.json()
+                return { success: false, message: error.message }
+            }
+
+            const data = await res.json()
+            set({ posts: [data.newPost, ...get().posts] })
+            return { success: true, message: data.message }
+        } catch (e) {
+            console.error(e)
         }
     }
 }))

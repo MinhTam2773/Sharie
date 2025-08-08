@@ -1,27 +1,37 @@
 import Post from "../model/post.model.js";
 import User from "../model/user.model.js";
 import { sendNotification } from "../lib/utils.js";
+import cloudinary from "../lib/cloudinary.js";
 
 export const uploadNewPost = async (req, res) => {
     try {
         const userId = req.decoded.id
-        const { caption, mediaUrl, mediaType } = req.body //
+        const { caption, media } = req.body //
 
-        if (!caption && !mediaType && !mediaUrl) {
-            return res.status(401).json({ success: false, message: 'controller/uploadNewPost: please atleast have a caption' })
-        } else if ((!mediaType && mediaUrl) || (mediaType && !mediaUrl)) {
-            return res.status(401).json({ success: false, message: 'controller/uploadNewPost: please specify mediaUrl && mediaType' })
+        if (!caption && media.length == 0) {
+            return res.status(401).json({ success: false, message: 'controller/uploadPost: please atleast have a caption' })
         }
 
-        const newPost = await Post.create({
+        let mediaUrls = []
+        if (media.length > 0) {
+            mediaUrls = await Promise.all(
+                media.map(async (item) => {
+                    const uploadRes = await cloudinary.uploader.upload(item.preview)
+                    return { mediaUrl: uploadRes.secure_url, mediaType: item.type }
+                })
+            )
+        }
+
+        let newPost = await Post.create({
             author: userId,
             caption,
-            mediaType,
-            mediaUrl
+            media: mediaUrls
         })
         if (!newPost) {
             return res.status(401).json({ success: false, message: 'controller/uploadNewPost: cant create new post' })
         }
+
+        newPost = await newPost.populate('author', 'avatar username')
 
         await sendNotification(userId,null, 'post', 'Post uploaded successfully')
 
@@ -194,30 +204,40 @@ export const sharePost = async (req, res) => {
     try {
         const currentUserId = req.decoded.id
         const sharedPostId = req.params.id
+        const {caption, media} = req.body
 
         if (!(await Post.findById(sharedPostId))) {
             return res.status(402).json({ success: false, message: "controller/sharePost: original post not found" })
         }
 
-        const { caption, mediaUrl, mediaType } = req.body //
-
-        if (!caption && !mediaType && !mediaUrl) {
-            return res.status(401).json({ success: false, message: 'controller/sharePost: please atleast have a caption' })
-        } else if ((!mediaType && mediaUrl) || (mediaType && !mediaUrl)) {
-            return res.status(401).json({ success: false, message: 'controller/sharePost: please specify mediaUrl && mediaType' })
+        let mediaUrls = []
+        if (media?.length > 0) {
+            mediaUrls = await Promise.all(
+                media.map(async (item) => {
+                    const resUpload = await cloudinary.uploader.upload(item.preview)
+                    return {mediaType: item.type, mediaUrl: resUpload.secure_url}
+            }))
         }
 
-        const newPost = await Post.create({
+        let newPost = await Post.create({
             authorId: currentUserId,
             caption,
-            mediaType,
-            mediaUrl,
+            media: mediaUrls,
             isShared: true,
             originalPost: sharedPostId
         })
         if (!newPost) {
             return res.status(401).json({ success: false, message: 'controller/sharePost: cant create new post' })
         }
+
+        newPost = await newPost.populate({
+            path: 'originalPost',
+            populate: {
+                path:'author',
+                model:'User',
+                select: '-password -email -__v -createdAt -updatedAt'
+            }
+        })
 
         res.status(200).json({ success: true, message: 'post shared successfully', newPost })
     } catch (e) {
