@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { useAuthStore } from "./authStore";
+import api from "../lib/fetchInterceptor.js";
 
 export const usePostStore = create((set, get) => ({
     posts: [],
@@ -14,23 +14,11 @@ export const usePostStore = create((set, get) => ({
         try {
             set({ isUploadingPost: true })
 
-            const res = await fetch('/api/posts/upload', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Beare ${useAuthStore.getState().accessToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
+            const res = await api.post('/posts/upload', formData)
+            if (!res.data.success) return {success: false, message: res.data.message}
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
-
-            const data = await res.json()
-            set({ posts: [data.newPost, ...get().posts] })
-            return { success: true, message: data.message }
+            set({ posts: [res.data.newPost, ...get().posts] })
+            return { success: true, message: res.data.message }
         } catch (e) {
             console.error(e)
         } finally {
@@ -41,21 +29,11 @@ export const usePostStore = create((set, get) => ({
         try {
             set({ loadingPosts: true })
 
-            const res = await fetch('/api/posts/', {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${useAuthStore.getState().accessToken}`
-                }
-            })
+            const res = await api.get('/posts/')
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
+            if (!res.data.success) return {success: false, message: res.data.message}
 
-            const data = await res.json()
-
-            const newPosts = data.posts
+            const newPosts = res.data.posts
 
             const uniquePosts = newPosts.filter(newPost =>
                 !get().posts.some(existingPost => existingPost._id === newPost._id)
@@ -63,7 +41,7 @@ export const usePostStore = create((set, get) => ({
 
             set({ posts: [...uniquePosts, ...get().posts] })
 
-            return { success: true, message: data.message }
+            return { success: true, message: res.data.message }
         } catch (e) {
             console.error(e)
         } finally {
@@ -72,40 +50,22 @@ export const usePostStore = create((set, get) => ({
     },
     likePost: async (postId) => {
         try {
-            const res = await fetch(`/api/posts/like/${postId}`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${useAuthStore.getState().accessToken}`
-                }
-            })
+            const res = await api.post(`/posts/like/${postId}`)
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
+            if (!res.data.success) return {success: false, message: res.data.message}
 
-            const data = await res.json()
-            return { success: data.success, message: data.message }
+            return { success: res.data.success, message: res.data.message }
         } catch (e) {
             console.error(e)
         }
     },
     unlikePost: async (postId) => {
         try {
-            const res = await fetch(`/api/posts/unlike/${postId}`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${useAuthStore.getState().accessToken}`
-                }
-            })
+            const res = await api.post(`/posts/unlike/${postId}`)
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
+            if (!res.data.success) return {success: false, message: res.data.message}
 
-            const data = await res.json()
-            return { success: data.success, message: data.message }
+            return { success: res.data.success, message: res.data.message }
         } catch (e) {
             console.error(e)
         }
@@ -114,20 +74,11 @@ export const usePostStore = create((set, get) => ({
         try {
             set({ isGettingComments: false })
 
-            const res = await fetch(`/api/posts/${postId}/comments`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${useAuthStore.getState().accessToken}`
-                }
-            })
+            const res = await api.get(`/posts/${postId}/comments`)
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
+            if (!res.data.success) return {success: false, message: res.data.message}
 
-            const data = await res.json()
-            return { success: data.success, message: data.message, comments: data.comments }
+            return { success: res.data.success, message: res.data.message, comments: res.data.comments }
         } catch (e) {
             console.error(e)
         } finally {
@@ -138,22 +89,11 @@ export const usePostStore = create((set, get) => ({
         try {
             set({ isUploadingComment: true })
 
-            const res = await fetch(`/api/comments/${postId}/upload`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
+            const res = await api.post(`/comments/${postId}/upload`,formData)
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
+            if (!res.data.success) return {success: false, message: res.data.message}
 
-            const data = await res.json()
-            return { success: data.success, message: data.message, comments: data.comments }
+            return { success: res.data.success, message: res.data.message, comments: res.data.comments }
 
         } catch (e) {
             console.error(e)
@@ -163,23 +103,12 @@ export const usePostStore = create((set, get) => ({
     },
     sharePost: async (postId, formData) => {
         try {
-            const res = await fetch(`/api/posts/share/${postId}`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Beare ${useAuthStore.getState().accessToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
+            const res = await api.post(`/posts/share/${postId}`, formData)
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
+            if (!res.data.success) return {success: false, message: res.data.message}
 
-            const data = await res.json()
-            set({ posts: [data.newPost, ...get().posts] })
-            return { success: true, message: data.message }
+            set({ posts: [res.data.newPost, ...get().posts] })
+            return { success: true, message: res.data.message }
         } catch (e) {
             console.error(e)
         }

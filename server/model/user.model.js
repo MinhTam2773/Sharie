@@ -16,6 +16,17 @@ const userSchema = new mongoose.Schema({
         }
 
     },
+    nickname: {
+        type: String,
+        trim: true,
+        minlength: 1,
+        maxlength: 23,
+        required: true
+    },
+    backgroundImage: {
+        type: String,
+        default: 'https://backiee.com/static/wallpapers/1000x563/170367.jpg'
+    },
     password:{
         type: String, 
         required: true

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { useAuthStore } from "./authStore";
+import api from "../lib/fetchInterceptor.js";
 
 export const useChatStore = create((set, get) => ({
     isLoadingChats: false,
@@ -12,23 +13,10 @@ export const useChatStore = create((set, get) => ({
 
     sendMessage: async (newMessage) => {
         try {
-            const res = await fetch(`/api/messages/${get().selectedChat._id}/send-message`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type':'application/json',
-                    Authorization:`Bearer ${useAuthStore.getState().accessToken}`
-                },
-                body: JSON.stringify(newMessage)
-            })
-
-            if (!res.ok) {
-                const error = await res.json()
-                console.log(error.message)
-                return {success: false, message: error.message}
-            }
-
-            const data = await res.json()
-            return {success: data.success, message: data.message}
+            const res = await api.post(`/messages/${get().selectedChat._id}/send-message`, newMessage)
+            if (!res.data.success) return {success: false, message: res.data.message}
+            
+            return {success: res.data.success, message: res.data.message}
         } catch(e) {
             console.log(e)
         }   
@@ -37,21 +25,12 @@ export const useChatStore = create((set, get) => ({
         try {
             set({ isLoadingChats: true })
 
-            const res = await fetch('/api/chats/', {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${useAuthStore.getState().accessToken}`
-                }
-            })
+            const res = await api.get('/chats/')
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
+            if (!res.data.success) return {success: false, message: res.data.message}
 
-            const data = await res.json()
-            set({chats: data.chats})
-            return { success: true, message: data.message, chats: data.chats }
+            set({chats: res.data.chats})
+            return { success: true, message: res.data.message, chats: res.data.chats }
         } catch (e) {
             console.error(e.message)
         } finally {
@@ -65,21 +44,11 @@ export const useChatStore = create((set, get) => ({
         try {
             set({ isGettingMessages: true })
 
-            const res = await fetch(`/api/messages/${chatId}?limit=20`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${useAuthStore.getState().accessToken}`
-                }
-            })
+            const res = await api.get(`/messages/${chatId}?limit=20`)
+            if (!res.data.success) return {success: false, message: res.data.message}
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
-
-            const data = await res.json()
-            set({ messages: data.messages })
-            return { success: true, message: data.message }
+            set({ messages: res.data.messages })
+            return { success: true, message: res.data.message }
         } catch (e) {
             console.error(e)
         }
@@ -90,21 +59,11 @@ export const useChatStore = create((set, get) => ({
         try {
             set({isLoadingMoreMessages: true})
 
-            const res = await fetch(`/api/messages/${selectedChat._id}?p=${page}&limit=20`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${useAuthStore.getState().accessToken}`
-                }
-            })
+            const res = await api.get(`/api/messages/${selectedChat._id}?p=${page}&limit=20`)
+            if (!res.data.success) return {success: false, message: res.data.message}
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
-
-            const data = await res.json()
-            set({ messages: [...data.messages, ...messages] })
-            return { success: true, message: data.message,messages: data.messages.map(message => message.text)  }
+            set({ messages: [...res.data.messages, ...messages] })
+            return { success: true, message: res.data.message,messages: res.data.messages.map(message => message.text)  }
         } catch(e) {
             console.error(e)
         } finally {

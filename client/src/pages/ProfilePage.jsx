@@ -1,11 +1,11 @@
 import React from 'react'
-import SidebarRight from '../components/RightSideBar/SidebarRight'
-import ChatContainer from '../components/Chats/ChatContainer'
 import { useChatStore } from '../store/chatStore'
 import LeftSidebar from '../components/LeftSideBar/LeftSidebar'
-import MiddleScreen from '../components/MiddleScreen'
+import ChatContainer from '../components/Chats/ChatContainer'
+import SidebarRight from '../components/RightSideBar/SidebarRight'
+import Profile from '../components/Profile/Profile'
 
-const HomePage = () => {
+const ProfilePage = () => {
     const { selectedChat } = useChatStore()
 
     return (
@@ -13,8 +13,8 @@ const HomePage = () => {
             <div className='md:w-1/5 w-full hidden lg:block'>
                 <LeftSidebar />
             </div>
-            <div className='lg:w-2/4 md:w-5/8 w-full'>
-                <MiddleScreen />
+            <div className='lg:w-2/4  w-full'>
+                <Profile/>
             </div>
             <div className='lg:w-1/4 w-3/5 md:block hidden'>
                 {selectedChat ? <ChatContainer /> : <SidebarRight />}
@@ -23,4 +23,4 @@ const HomePage = () => {
     )
 }
 
-export default HomePage
+export default ProfilePage

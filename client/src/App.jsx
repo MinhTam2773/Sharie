@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import Navbar from './components/Navbar'
+import Navbar from './components/Navbar/Navbar'
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
@@ -7,35 +7,24 @@ import Background from './components/Background'
 import { useAuthStore } from './store/authStore'
 import SignInPage from './pages/SignInPage'
 import SearchResultPage from './pages/SearchResultPage'
+import ProfilePage from './pages/ProfilePage'
 
 const App = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { accessToken, generateToken, getCurrentUser, connectSocket } = useAuthStore()
+
+  const {getCurrentUser} = useAuthStore()
 
   useEffect(() => {
     if (location.pathname.includes('/login') ||
       location.pathname.includes('/signin')) return
 
-    const getToken = async () => {
-      await generateToken()
-      if (!useAuthStore.getState().accessToken) {
-        navigate('/login')
+      const getUser = async () => {
+        const {success} = await getCurrentUser()
+        if (!success) navigate('/login')
       }
-    }
-    getToken()
-    
-    const intervalId = setInterval(async () => {
-      await generateToken()
-      if (!useAuthStore.getState().accessToken) {
-        clearInterval(intervalId)
-        navigate('/login')
-        return
-      }
-    }, 1000 * 60 * 12)
-
-    return () => clearInterval(intervalId)
-  }, [accessToken, navigate, generateToken, location, getCurrentUser, connectSocket])
+      getUser()
+  }, [])
 
   return (
     <div>
@@ -46,9 +35,8 @@ const App = () => {
         <Route path='/login' element={<LoginPage />} />
         <Route path='/signin' element={<SignInPage />} />
         <Route path='/search/:query' element={<SearchResultPage />} />
+        <Route path='/:username' element={<ProfilePage/>} />
       </Routes>
-
-
     </div>
   )
 }

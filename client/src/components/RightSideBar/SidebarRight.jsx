@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
-import { useChatStore } from '../store/chatStore'
-import SideBarRightLoading from './loadings/sideBarRightLoading'
-import { useAuthStore } from '../store/authStore'
+import { useChatStore } from '../../store/chatStore'
+import SideBarRightLoading from '../loadings/sideBarRightLoading'
+import { useAuthStore } from '../../store/authStore'
 
 const SidebarRight = () => {
   const { chats, getChats, isLoadingChats, setSelectedChat } = useChatStore()
@@ -41,18 +41,18 @@ const SidebarRight = () => {
     }
   }
 
-  if (isLoadingChats && !user) return <SideBarRightLoading />
+  if (isLoadingChats || !user) return <SideBarRightLoading />
 
   return (
-    <aside className="fixed top-16 right-0 h-[calc(100vh-4rem)] w-80 overflow-y-auto">
+    <aside className="fixed top-16 right-0 h-[calc(100vh-4rem)]  overflow-y-auto w-80">
       {chats.length === 0 && (
         <div className="p-4 text-center text-gray-400">No chats available</div>
       )}
       {chats.map((chat) => {
         const { chatImage, chatName } = getChatHeader(chat)
         const lastMessageText =
-          typeof chat.lastMessage === 'string'
-            ? chat.lastMessage
+          typeof chat.lastMessage.text === 'string'
+            ? chat.lastMessage.text
             : chat.lastMessage.mediaUrl ? 'sent a media' : ''
 
         return (

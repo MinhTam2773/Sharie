@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { useAuthStore } from "./authStore";
+import api from "../lib/fetchInterceptor.js";
 
 export const useSearchStore = create((set) => ({
     isSearching: false,
@@ -7,20 +7,11 @@ export const useSearchStore = create((set) => ({
         try {
             set({isSearching: true})
 
-            const res = await fetch(`/api/search/${query}`, {
-                method:'GET', 
-                headers: {
-                    Authorization: `Bearer ${useAuthStore.getState().accessToken}`
-                }
-            })
+            const res = await api.get(`/search/${query}`)
 
-            if (!res.ok) {
-                const error = await res.json()
-                return {success: false, message: error.message}
-            }
+            if (!res.data.success) return {success: false, message: res.data.message}
 
-            const data = await res.json()
-            return {success: true, message: data.message, users: data.users, posts: data.posts}
+            return {success: true, message: res.data.message, users: res.data.users, posts: res.data.posts}
         } catch(e) {
             console.error(e)
         } finally {

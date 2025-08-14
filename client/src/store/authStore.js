@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { io } from "socket.io-client";
+import api from '../lib/fetchInterceptor.js';
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
@@ -23,23 +24,14 @@ export const useAuthStore = create((set, get) => ({
                 return { success: false, message: 'your email or password is invalid' }
             }
 
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(form),
-                credentials: 'include'
-            })
+            const res = await api.post('/auth/login', form)
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
+            if (!res.data.success) return { success: false, message: res.data.message }
+            set({ accessToken: res.data.accessToken })
+            await get().getCurrentUser()
+            await get().connectSocket()
 
-            const data = await res.json()
-            set({ accessToken: data.accessToken })
-            return { success: data.success, message: data.message }
+            return { success: res.data.success, message: res.data.message }
         } catch (e) {
             console.error(e)
         } finally {
@@ -48,27 +40,16 @@ export const useAuthStore = create((set, get) => ({
     },
     generateToken: async () => {
         try {
-            await get().disconnectSocket()
+            const res = await api.post('/auth/refresh')
+            if (!res.data.success) return { success: false, message: res.data.message }
 
-            const res = await fetch('/api/auth/refresh', {
-                method: 'POST',
-                credentials: 'include'
-            })
-
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
-
-            const data = await res.json()
-            set({ accessToken: data.accessToken })
-
-            if (data.success) {
+            if (res.data.success) {
+                set({ accessToken: res.data.accessToken })
                 await get().getCurrentUser()
                 await get().connectSocket()
             }
 
-            return data.accessToken
+            return { success: true, accessToken: res.data.accessToken }
         } catch (e) {
             console.error(e)
         }
@@ -77,21 +58,10 @@ export const useAuthStore = create((set, get) => ({
         try {
             set({ isCheckingUser: true })
 
-            const res = await fetch('/api/auth/checkUser', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email })
-            })
+            const res = await api.post('/auth/checkUser', { email })
+            if (!res.data.success) return { success: false, message: res.data.message }
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
-
-            const data = await res.json()
-            return { success: data.success, message: data.message }
+            return { success: res.data.success, message: res.data.message }
         } catch (e) {
             console.error(e)
         } finally {
@@ -100,21 +70,10 @@ export const useAuthStore = create((set, get) => ({
     },
     sendCode: async (formData) => { //{email, password}
         try {
-            const res = await fetch('/api/auth/sendCode', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
+            const res = await api.post('/auth/sendCode', formData)
+            if (!res.data.success) return { success: false, message: res.data.message }
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
-
-            const data = await res.json()
-            return { success: data.success, message: data.message }
+            return { success: res.data.success, message: res.data.message }
         } catch (e) {
             console.error(e)
         }
@@ -123,22 +82,10 @@ export const useAuthStore = create((set, get) => ({
         try {
             set({ isVerifyingCode: true })
 
-            const res = await fetch('/api/auth/verifyCode', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
+            const res = await api.post('/auth/verifyCode', formData)
+            if (!res.data.success) return { success: false, message: res.data.message }
 
-            if (!res.ok) {
-                const error = await res.json()
-                console.log(error.message)
-                return { success: false, message: error.message }
-            }
-
-            const data = await res.json()
-            return { success: data.success, message: data.message }
+            return { success: res.data.success, message: res.data.message }
         } catch (e) {
             console.error(e)
         } finally {
@@ -148,23 +95,14 @@ export const useAuthStore = create((set, get) => ({
     signin: async (form) => {
         try {
             set({ isSignignIn: true })
-            const res = await fetch('/api/auth/signin', {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(form)
-            })
+            const res = await api.post('/auth/signin', form)
+            if (!res.data.success) return { success: false, message: res.data.message }
 
-            if (!res.ok) {
-                const error = await res.json()
-                return { success: false, message: error.message }
-            }
+            set({ accessToken: res.data.accessToken })
+            get().getCurrentUser()
+            get().connectSocket()
 
-            const data = await res.json()
-
-            set({ accessToken: data.accessToken })
-            return { success: true, message: data.message }
+            return { success: true, message: res.data.message }
         } catch (e) {
             console.error(e)
         } finally {
@@ -173,98 +111,55 @@ export const useAuthStore = create((set, get) => ({
     },
     logout: async () => {
         try {
-            set({isLoggingOut: true})
+            set({ isLoggingOut: true })
 
-            const res = await fetch('/api/auth/logout',{
-                method:'POST',
-                headers: {
-                    'Content-Type':'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify()
-            })
-
-            if (!res.ok) {
-                const error =await res.json()
-                return {success: false, message: error.message}
-            }
-
-            const data = await res.json()
-            set({accessToken: null})
-            return {success: data.success, message: data.message}
-        } catch(e) {
+            const res = await api.post('/auth/logout')
+            set({ accessToken: null, user: null })
+            get().disconnectSocket()
+            return { success: res.data.success, message: res.data.message }
+        } catch (e) {
             console.error(e)
         } finally {
-            set({isLoggingOut: false})
+            set({ isLoggingOut: false })
         }
     },
     getCurrentUser: async () => {
-        try{
-            const {accessToken} = get()
-            set({isGettingCurrentUser: true})
-
-            const res = await fetch('/api/users/me', {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                }
-            })
-
-            if (!res.ok) {
-                const error = await res.json()
-                return {success: false, message: error.message}
-            }
-
-            const data = await res.json()
-            set ({user: data.user})
-            return {success: true, message: data.message}
-        } catch(e) {
-            console.error(e)
-        }
-    },
-    getTargetUser: async (id) => {
         try {
-            set({isGettingTargetUser: true})
+            set({ isGettingCurrentUser: true })
 
-            const res = await fetch(`/api/users/${id}`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${get().accessToken}`
-                }
-            })
-
-            if (!res.ok) {
-                const error = await res.json()
-                return {success: false, message: error.message}
-            }
+            const res = await api.get('/users/me')
             
-            const data = await res.json()
-            return {success: true, message: data.message, user: data.user }
-        } catch(e) {
-            console.error(e)
+            if (!res.data.success) return {success: false, message: res.data.message}
+            set({ user: res.data.user })
+
+            return { success: true, message: res.data.message }
+        } catch (e) {
+            console.log(e.message)
+            return {success: false}
         } finally {
-            set({isGettingTargetUser: false})
+            set({ isGettingCurrentUser: false })
         }
     },
     connectSocket: () => {
-        const {accessToken, user} = get()
-        if (!accessToken) return
+        const { accessToken } = get()
 
         try {
+            if (!accessToken || get().socket) return
+
             const socket = io(BASE_URL, {
                 query: {
-                    userId: user._id
+                    userId: get().user._id
                 }
             })
             socket.connect()
-    
-            set({socket: socket})
-        } catch(e) {
+
+            set({ socket: socket })
+        } catch (e) {
             console.error(e)
         }
     },
     disconnectSocket: () => {
         if (get().socket?.connected) get().socket.disconnect()
-    }
+    },
 }))
 

@@ -68,9 +68,9 @@ const CurrentUserCard = () => {
     if (isGettingCurrentUser && !user) return <p>Loading...</p>
 
     return (
-        <div className="w-2/11 p-4 fixed">
+        <div className="p-4 fixed">
             {user && (
-                <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-md p-6 flex flex-col items-center">
+                <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-md p-6 flex flex-col items-center w-5/6">
                     <img src={user.avatar} alt="avatar" className="w-20 h-20 rounded-full object-cover shadow" />
                     <p className="font-semibold text-lg mt-2">{user.username}</p>
                     <p className="text-gray-500 text-sm text-center mt-3 bg-amber-50 px-3 py-2 rounded-2xl">
@@ -86,11 +86,11 @@ const CurrentUserCard = () => {
             )}
 
             {isOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-100">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
                     <form
                         ref={uploadPostRef}
                         onSubmit={handleUploadPost}
-                        className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg w-full max-w-lg p-6 relative"
+                        className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg w-full max-w-lg p-6 relative z-50"
                     >
                         <div className="flex items-center gap-3 mb-4">
                             <img src={user.avatar} className="w-10 h-10 rounded-full object-cover" />

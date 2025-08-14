@@ -137,7 +137,7 @@ export const login = async (req, res) => {
         } else if (!user) {
             return res.status(401).json({ success: false, message: 'Email not found' })
         } else if (!(await bcrypt.compare(password, user.password))) {
-            return res.status(402).json({ success: false, message: 'password is wrong' })
+            return res.json({ success: false, message: 'password is wrong' })
         }
 
         const accessToken = generateAccessToken(user)

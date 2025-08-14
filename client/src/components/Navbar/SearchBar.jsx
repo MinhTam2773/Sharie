@@ -1,8 +1,8 @@
 // SearchBar.jsx
 import React, { useRef, useState } from 'react';
 import { FaSearch, FaTimes } from 'react-icons/fa';
-import { useSearchStore } from '../store/searchStore';
 import { useNavigate } from 'react-router-dom';
+import { useSearchStore } from '../../store/searchStore';
 
 const SearchBar = () => {
   const { search } = useSearchStore();

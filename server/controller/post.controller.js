@@ -33,7 +33,7 @@ export const uploadNewPost = async (req, res) => {
 
         newPost = await newPost.populate('author', 'avatar username')
 
-        await sendNotification(userId,null, 'post', 'Post uploaded successfully')
+        await sendNotification(userId, null, 'post', 'Post uploaded successfully')
 
         res.status(200).json({ success: true, message: 'post uploaded successfully', newPost })
     } catch (err) {
@@ -64,7 +64,16 @@ export const getPostsFromFollowing = async (req, res) => {
             return res.status(401).json({ success: false, message: "controller/getPostsFromFollowing: user not found" })
         }
 
-        const posts = await Post.find({ author: { $in: currentUser.following } }).populate('author', 'avatar username')
+        const posts = await Post.find({ author: { $in: currentUser.following } })
+            .populate('author', 'avatar username')
+            .populate({
+                path: 'originalPost',
+                populate: {
+                    path: 'author',
+                    model: 'User',
+                    select: '-password -email -__v -createdAt -updatedAt'
+                }
+            })
 
         res.status(200).json({ success: true, message: "get posts from following successfully", posts })
     } catch (err) {
@@ -204,7 +213,7 @@ export const sharePost = async (req, res) => {
     try {
         const currentUserId = req.decoded.id
         const sharedPostId = req.params.id
-        const {caption, media} = req.body
+        const { caption, media } = req.body
 
         if (!(await Post.findById(sharedPostId))) {
             return res.status(402).json({ success: false, message: "controller/sharePost: original post not found" })
@@ -215,12 +224,14 @@ export const sharePost = async (req, res) => {
             mediaUrls = await Promise.all(
                 media.map(async (item) => {
                     const resUpload = await cloudinary.uploader.upload(item.preview)
-                    return {mediaType: item.type, mediaUrl: resUpload.secure_url}
-            }))
+                    return { mediaType: item.type, mediaUrl: resUpload.secure_url }
+                }))
         }
 
+        const user = await User.findById(currentUserId)
+
         let newPost = await Post.create({
-            authorId: currentUserId,
+            author: user,
             caption,
             media: mediaUrls,
             isShared: true,
@@ -233,8 +244,8 @@ export const sharePost = async (req, res) => {
         newPost = await newPost.populate({
             path: 'originalPost',
             populate: {
-                path:'author',
-                model:'User',
+                path: 'author',
+                model: 'User',
                 select: '-password -email -__v -createdAt -updatedAt'
             }
         })

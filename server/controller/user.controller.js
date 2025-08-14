@@ -5,7 +5,7 @@ export const getCurrentUser = async (req, res) => {
         const id = req.decoded.id //get decoded from middleware
         const user = await User.findById(id)
         if (!user) {
-            return res.status(401).json({ success: false, message: 'getCurrentUser: invalid id stored inside token' })
+            return res.status(400).json({ success: false, message: 'getCurrentUser: invalid id stored inside token' })
         }
 
         res.status(200).json({ success: true, message: 'get current user successfully', user })
@@ -16,60 +16,40 @@ export const getCurrentUser = async (req, res) => {
 
 export const getTargetUser = async (req, res) => {
     try {
-        const targetUserId = req.params.id
-        const user = await User.findById(targetUserId)
+        const targetUserName = req.params.username
+        const currentUserId = req.decoded.id
+
+        const user = await User.findOne({ username: targetUserName })
         if (!user) {
-            return res.status(401).json({success: false, message: "controller/getTargetUser: target user not found"})
+            return res.status(401).json({ success: false, message: "controller/getTargetUser: target user not found" })
         }
 
-        res.status(200).json({ success: true, message: 'get current user successfully', user })
-    } catch(err) {
-        res.status(400).json({success: false, message: `controller/getTargetUser: ${err.message}`})
+        const isFollowing = user.followers.includes(currentUserId)
+
+        res.status(200).json({ success: true, message: 'get current user successfully', user, isFollowing })
+    } catch (err) {
+        res.status(400).json({ success: false, message: `controller/getTargetUser: ${err.message}` })
     }
 }
 
-export const updateCurrentUser = async (req,res) => {
+export const updateCurrentUser = async (req, res) => {
     try {
         const id = req.decoded.id
         const updates = req.body
 
         const updatedUser = await User.findByIdAndUpdate(
-            id, 
-            {$set: updates},
-            {new: true, runValidators: true}
+            id,
+            { $set: updates },
+            { new: true, runValidators: true }
         ).select('-refreshToken') // optional: exclude token from response
 
-        if (!updatedUser){
-            return res.status(401).json({success: false, message: `controller/updateCurrentUser: can not update user`})
+        if (!updatedUser) {
+            return res.status(401).json({ success: false, message: `controller/updateCurrentUser: can not update user` })
         }
 
-        res.status(200).json({success: true, updatedUser, message: "Update user successfully"})
-    } catch(err) {
-        res.status(400).json({success: false, message: `controller/updateCurrentUser: ${err.message}`})
-    }
-}
-
-export const getFollowStatus = async (req, res) => {
-    try {
-        const targetUserId = req.params.id
-        const currentUserId = req.decoded.id
-
-        if (targetUserId === currentUserId) {
-            return res.status(401).json({success: false, message:"controller/getFollowStatus: you cant follow yourself"})
-        }
-
-        const currentUser = await User.findById(currentUserId)
-
-        if (!currentUser) {
-            return res.status(401).json({ sucess: false, message: "controller/getFollowStatus: current user not found" })
-        }
-
-        const isFollowing = currentUser.following.includes(targetUserId)
-
-        const message = isFollowing ? "you are following them" : "you are NOT following them"
-        res.json({ success: true, message })
+        res.status(200).json({ success: true, updatedUser, message: "Update user successfully" })
     } catch (err) {
-        res.status(400).json({ success: false, message: `getFollowStatus: ${err.message}` })
+        res.status(400).json({ success: false, message: `controller/updateCurrentUser: ${err.message}` })
     }
 }
 
@@ -113,7 +93,7 @@ export const unfollow = async (req, res) => {
             $pull: { followers: currentUserId }
         })
 
-        res.status(200).json({success: true, message: "unfollow successfully"})
+        res.status(200).json({ success: true, message: "unfollow successfully" })
     } catch (err) {
         res.status(400).json({ success: false, message: `${err.message}` })
     }

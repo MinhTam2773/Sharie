@@ -1,17 +1,17 @@
 // Navbar.jsx
 import React from 'react';
 import { FaBookmark, FaBell, FaUserAstronaut } from 'react-icons/fa';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
 
 const Navbar = () => {
-  const { user, logout } = useAuthStore();
+  const { user, logout} = useAuthStore();
   const navigate = useNavigate();
+
   const handleLogout = async () => {
-    const { success, message } = await logout()
-    if (success) navigate('/login')
-    console.log(message)
+    navigate('/login')
+    await logout()
   }
 
   return (

@@ -9,8 +9,10 @@ import SelectedPost from './SelectedPost';
 import { useRef } from 'react';
 import { useEffect } from 'react';
 import ShareModal from './ShareModal';
+import { useNavigate } from 'react-router-dom';
 
 const Post = ({ post }) => {
+  const navigate = useNavigate()
   const { user } = useAuthStore()
   const { likePost, unlikePost } = usePostStore()
 
@@ -41,8 +43,8 @@ const Post = ({ post }) => {
     setIsOpen(true)
   }
 
-  const handleSharePost = () => {
-    setIsSharing(true)
+  const handleNavigate = (user) => {
+    navigate(`/${user.username}`)
   }
 
   useEffect(() => {
@@ -58,14 +60,13 @@ const Post = ({ post }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-
   return (
     <div className='w-5/6 mx-auto bg-gray-800 flex flex-col rounded-2xl'>
       <div onClick={() => setIsOpen(true)}>
         {/* username  */}
-        <div className='flex gap-3 p-3'>
-          <img src={post.author.avatar} alt={`${post.author.username}'s avatar`} className='h-10 w-10 rounded-full' />
-          <p className='font-semibold'>{post.author.username}</p>
+        <div className='flex gap-3 p-3' onClick={() => handleNavigate(post.author)}>
+          <img src={post.author.avatar} alt={`${post.author.username}'s avatar`} className='h-10 w-10 rounded-full cursor-pointer' />
+          <p className='font-semibold cursor-pointer hover:underline'>{post.author.username}</p>
         </div>
 
         {/* caption */}
@@ -79,18 +80,18 @@ const Post = ({ post }) => {
           {post.media.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 p-3">
               {post.media.map((media, index) => (
-                <div key={index} className="relative rounded-lg overflow-hidden bg-black">
+                <div key={index} className=" rounded-lg overflow-hidden bg-black">
                   {media.mediaType === 'image' ? (
                     <img
                       src={media.mediaUrl}
                       alt={`media-${index}`}
-                      className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                      className="w-full h-50 object-cover hover:scale-105 transition-transform duration-300 z-0"
                     />
                   ) : (
                     <video
                       src={media.mediaUrl}
                       controls
-                      className="w-full h-64 object-cover"
+                      className="w-full h-50 object-cover z-0"
                     />
                   )}
                 </div>
@@ -100,12 +101,22 @@ const Post = ({ post }) => {
         </div>
 
         {/* originalpost if is shared */}
-        {post.originalPost && (
-          <div className='border rounded-2xl p-2'>
+        {post.isShared && (
+          <div className=' border-2 border-gray-600 rounded-2xl p-2 mx-2'>
             {/* username  */}
             <div className='flex gap-3 p-3'>
-              <img src={post.originalPost?.author.avatar} alt={`${post.originalPost?.author.username}'s avatar`} className='h-10 w-10 rounded-full' />
-              <p className='font-semibold'>{post.originalPost?.author.username}</p>
+              <img 
+                src={post.originalPost?.author?.avatar} 
+                alt={`${post.originalPost?.author?.username}'s avatar`} 
+                className='h-10 w-10 rounded-full cursor-pointer' 
+                onClick={() => handleNavigate(post.author)}
+              />
+              <p 
+                className='font-semibold cursor-pointer hover:underline' 
+                onClick={() => handleNavigate(post.author)}
+              >
+                {post.originalPost?.author?.username}
+              </p>
             </div>
 
             {/* caption */}
@@ -119,7 +130,7 @@ const Post = ({ post }) => {
               {post.originalPost?.media?.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 p-3">
                   {post.originalPost?.media.map((media, index) => (
-                    <div key={index} className="relative rounded-lg overflow-hidden bg-black">
+                    <div key={index} className="rounded-lg overflow-hidden bg-black">
                       {media.mediaType === 'image' ? (
                         <img
                           src={media.mediaUrl}
@@ -156,10 +167,10 @@ const Post = ({ post }) => {
             <button className='p-1 cursor-pointer'> <FaComment /> </button>
             <span>{post.commentCount}</span>
           </div>
-          <div className='flex'
+          <div className='flex cursor-pointer'
             onClick={(e) => {
               e.stopPropagation()
-              handleSharePost()
+              setIsSharing(true)
             }}>
             <button className='p-1'><FaShare /></button>
             <span>{post.shares.length}</span>
