@@ -16,7 +16,11 @@ export const uploadNewPost = async (req, res) => {
         if (media.length > 0) {
             mediaUrls = await Promise.all(
                 media.map(async (item) => {
-                    const uploadRes = await cloudinary.uploader.upload(item.preview)
+    
+                    const uploadRes = item.type === 'image' 
+                        ? await cloudinary.uploader.upload(item.preview)
+                        : await cloudinary.uploader.upload(item.preview, {resource_type: 'video'})
+
                     return { mediaUrl: uploadRes.secure_url, mediaType: item.type }
                 })
             )

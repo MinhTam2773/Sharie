@@ -1,12 +1,11 @@
 import React, { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useUserStore } from '../../store/userStore'
-import { useChatStore } from '../../store/chatStore'
+import ButtonsInProfile from './ButtonsInProfile'
 
 const Profile = () => {
-    const { getTargetUser, selectedUser, isGettingTargetUser, followStatus, follow, unfollow } = useUserStore()
+    const { getTargetUser, selectedUser, isGettingTargetUser } = useUserStore()
     const { username } = useParams()
-    const { findChat } = useChatStore()
 
     useEffect(() => {
         if (username) {
@@ -63,24 +62,7 @@ const Profile = () => {
                 {selectedUser.bio ? selectedUser.bio : '' }
             </p>
 
-            {/* buttons */}
-            <div className='flex mt-2 gap-15 justify-center'>
-                {followStatus ?
-                    <button
-                        className='bg-gray-800 px-4 py-2 rounded-xl hover:bg-gray-700 font-semibold'
-                        onClick={() => unfollow()}
-                    >Following
-                    </button>
-                    :
-                    <button
-                        className='bg-blue-500 px-4 py-2 rounded-xl hover:bg-blue-400 font-semibold'
-                        onClick={() => follow()}
-                    >Follow</button>}
-
-                <button className='bg-gray-800 px-4 py-2 rounded-xl hover:bg-gray-700 font-semibold'
-                    onClick={() => findChat(selectedUser)}
-                >Message</button>
-            </div>
+            <ButtonsInProfile/>
         </div>
     )
 }

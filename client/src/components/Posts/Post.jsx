@@ -141,7 +141,7 @@ const Post = ({ post }) => {
                         <video
                           src={media.mediaUrl}
                           controls
-                          className="w-full h-30 object-cover"
+                          className="w-full h-30 object-cover z-0"
                         />
                       )}
                     </div>
