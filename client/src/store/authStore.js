@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { io } from "socket.io-client";
 import api from '../lib/fetchInterceptor.js';
+import { useChatStore } from './chatStore.js';
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
@@ -114,8 +115,9 @@ export const useAuthStore = create((set, get) => ({
             set({ isLoggingOut: true })
 
             const res = await api.post('/auth/logout')
-            set({ accessToken: null, user: null })
+            set({ accessToken: null, user: null, socket: null })
             get().disconnectSocket()
+            useChatStore.getState().setSelectedChat(null)
             return { success: res.data.success, message: res.data.message }
         } catch (e) {
             console.error(e)

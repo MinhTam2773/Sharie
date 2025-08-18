@@ -1,12 +1,11 @@
 import React from 'react'
 import SidebarRight from '../components/RightSideBar/SidebarRight'
 import ChatContainer from '../components/Chats/ChatContainer'
-import { useChatStore } from '../store/chatStore'
 import LeftSidebar from '../components/LeftSideBar/LeftSidebar'
 import MiddleScreen from '../components/MiddleScreen'
+import Chats from '../components/RightSideBar/Chats'
 
 const HomePage = () => {
-    const { selectedChat } = useChatStore()
 
     return (
         <div className='flex flex-col md:flex-row w-full gap-12 h-screen'>
@@ -16,8 +15,8 @@ const HomePage = () => {
             <div className='lg:w-2/4 md:w-5/8 w-full'>
                 <MiddleScreen />
             </div>
-            <div className='lg:w-1/4 w-3/5 md:block hidden'>
-                {selectedChat ? <ChatContainer /> : <SidebarRight />}
+            <div className='lg:w-1/5 w-2/5 md:block hidden'>
+                <Chats/>
             </div>
         </div>
     )

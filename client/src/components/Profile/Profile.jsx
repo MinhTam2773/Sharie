@@ -1,16 +1,17 @@
 import React, { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useUserStore } from '../../store/userStore'
+import { useChatStore } from '../../store/chatStore'
 
 const Profile = () => {
     const { getTargetUser, selectedUser, isGettingTargetUser, followStatus, follow, unfollow } = useUserStore()
     const { username } = useParams()
+    const { findChat } = useChatStore()
 
     useEffect(() => {
         if (username) {
             getTargetUser(username)
         }
-        // fetch again if username changes (navigating between profiles)
     }, [username, getTargetUser])
 
     if (isGettingTargetUser) {
@@ -58,12 +59,12 @@ const Profile = () => {
             </div>
 
             {/* Bio */}
-            {selectedUser.bio && (
-                <p className="text-gray-700 dark:text-gray-300 mt-24 sm:mt-32 px-3">{selectedUser.bio}</p>
-            )}
+            <p className="text-gray-700 dark:text-gray-300 mt-24 sm:mt-32 px-3">
+                {selectedUser.bio ? selectedUser.bio : '' }
+            </p>
 
             {/* buttons */}
-            <div className='flex mt-5 gap-15 justify-center'>
+            <div className='flex mt-2 gap-15 justify-center'>
                 {followStatus ?
                     <button
                         className='bg-gray-800 px-4 py-2 rounded-xl hover:bg-gray-700 font-semibold'
@@ -76,7 +77,9 @@ const Profile = () => {
                         onClick={() => follow()}
                     >Follow</button>}
 
-                <button className='bg-gray-800 px-4 py-2 rounded-xl hover:bg-gray-700 font-semibold'>Message</button>
+                <button className='bg-gray-800 px-4 py-2 rounded-xl hover:bg-gray-700 font-semibold'
+                    onClick={() => findChat(selectedUser)}
+                >Message</button>
             </div>
         </div>
     )

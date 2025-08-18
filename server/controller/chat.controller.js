@@ -53,11 +53,31 @@ export const getChats = async (req, res) => { //ask chatgpt about this
     try {
         const currentUserId = req.decoded.id
 
-        const chats = await Chat.find({ participants: currentUserId }).populate('participants', 'avatar username').populate('lastMessage')
+        const chats = await Chat.find({ participants: currentUserId }).populate('participants', 'avatar username nickname').populate('lastMessage')
         if (!chats) return res.status(401).json({ success: false, message: 'controller/getChats: can not get chats from db' })
 
         res.status(200).json({ success: true, message: 'get chats successfully', chats })
     } catch (e) {
         res.status(400).json({ success: false, message: e.message })
+    }
+}
+
+export const findChat = async (req, res) => {
+    try {
+        const currentUserId = req.decoded.id
+        const targetUserId = req.params.id
+    
+        if (!targetUserId) return res.status(400).json({ success: false, message: 'controller/findChat: userId not found' })
+    
+        const chat = await Chat.findOne({ 
+            participants: { $all: [targetUserId, currentUserId] },
+            $expr: { $eq: [{ $size: "$participants" }, 2] } // exactly 2 participants
+        }).populate('participants', 'username avatar nickname')
+    
+        if (!chat) return res.status(200).json({isExistingChat: false, message:'chat not found'})
+    
+        return res.status(200).json({success: true, isExistingChat: true, message:'chat found', chat})
+    } catch(e) {
+        console.log(e)
     }
 }

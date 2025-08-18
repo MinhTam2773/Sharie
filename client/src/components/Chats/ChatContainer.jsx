@@ -4,6 +4,7 @@ import ChatHeader from './ChatHeader';
 import ChatInput from './ChatInput';
 import { useAuthStore } from '../../store/authStore';
 import { useState } from 'react';
+import Spinner from '../loadings/Spinner';
 
 const ChatContainer = () => {
   const {
@@ -11,8 +12,9 @@ const ChatContainer = () => {
     messages,
     subcribeToMessage,
     unSubscribeToMessage,
-    selectedChat,
     loadMoreMessages,
+    isGettingMessages,
+    selectedChat
   } = useChatStore();
   const { user } = useAuthStore()
 
@@ -23,26 +25,24 @@ const ChatContainer = () => {
   const [suppressLoading, setSuppressLoading] = useState(true)
 
   useEffect(() => {
-    if (selectedChat?._id) {
-      getRecentMessages(selectedChat._id);
-      subcribeToMessage();
-    }
+    getRecentMessages(selectedChat._id);
+    subcribeToMessage();
     return () => unSubscribeToMessage();
-  }, [selectedChat, subcribeToMessage, unSubscribeToMessage, getRecentMessages]);
+  }, [selectedChat]);
 
   useEffect(() => {
     if (shouldScrollRef.current) messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleScroll = async () => {
-    
+
     const container = messageContainerRef.current;
     const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 10;
 
     if (isNearBottom) {
       setSuppressLoading(false)
     }
-      
+
     if (!container || suppressLoading) return;
 
     if (container.scrollTop < 10) {
@@ -57,15 +57,15 @@ const ChatContainer = () => {
 
 
   return (
-    <div className="fixed right-0 top-0 pt-16 w-5/21 h-full bg-gradient-to-b from-purple-950 to-indigo-950 border-l border-purple-500/20 shadow-xl flex flex-col">
-      {/* Header */}
+    <div className=" bg-gradient-to-b from-purple-950 to-indigo-950 border-l border-purple-500/20 shadow-xl flex flex-col">
+      {/* header */}
       <ChatHeader />
 
       {/* Messages */}
       <div
         ref={messageContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-purple-500/40 scrollbar-track-purple-900/20"
+        className="h-135 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-purple-500/40 scrollbar-track-purple-900/20"
       >
         {messages.map((message, index) => {
           const isSelf = message.sender._id === user._id;
@@ -114,6 +114,17 @@ const ChatContainer = () => {
             </React.Fragment>
           );
         })}
+
+        {/* loadingMessages */}
+        {isGettingMessages && (<Spinner />)}
+
+        {/* if no message */}
+        {messages.length == 0 && !isGettingMessages && (
+          <div className='flex justify-center'>
+            <p className='text-sm text-gray-500 font-semibold'>Start the chat with 'HALOOO'</p>
+          </div>
+        )}
+
       </div>
 
       {/* Input */}

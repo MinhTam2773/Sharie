@@ -8,7 +8,8 @@ import { io } from "../lib/socket.js";
 export const startMessage = async (req, res) => {
     try {
         const currentUserId = req.decoded.id
-        const { userId, text, mediaType, media } = req.body
+        const userId = req.params.id
+        const { text, mediaType, media } = req.body
 
         if (!text && !mediaType && !media) {
             return res.status(401).json({ success: false, message: 'controller/startMessage: please atleast have a text' })
@@ -27,8 +28,7 @@ export const startMessage = async (req, res) => {
             mediaUrl = uploadRes.secure_url
         }
 
-
-        const message = await Message.create({
+        let newMessage = await Message.create({
             text,
             mediaType,
             mediaUrl,
@@ -36,12 +36,21 @@ export const startMessage = async (req, res) => {
             chatId: chat._id
         })
 
-        chat.lastMessage = message._id
+        chat.lastMessage = newMessage._id
         await chat.save()
+
+        newMessage = await newMessage.populate('sender', 'username avatar nickname')
+
+        const receiverSocketIds = getReceiverSocketId(chat.participants)
+        receiverSocketIds?.forEach((socketId) => {
+            io.to(socketId).emit('newMessage', newMessage)
+            console.log('new Message sent from', currentUserId)
+        })
 
         res.status(200).json({ success: true, message: "start chat successfully", chatId: chat._id })
     } catch (e) {
         res.status(400).json({ success: false, message: `controller/startMessage: ${e.message}` })
+        console.log(e.message)
     }
 }
 
@@ -63,9 +72,10 @@ export const sendMessage = async (req, res) => {
             mediaUrl = uploadRes.secure_url
         }
 
-        const chat = await Chat.findById(chatId)
+        let chat = await Chat.findById(chatId)
 
         if (!chat) {
+            chat = await Chat.create({ participants: [currentUserId, userId] })
             return res.status(403).json({ success: false, message: 'controller/sendMessage: chat not found' })
         }
 
@@ -99,7 +109,7 @@ export const getMessages = async (req, res) => {
         const chatId = req.params.id
         const { p = 0, limit = 20 } = req.query
 
-        const messages = await Message.find({chatId})
+        const messages = await Message.find({ chatId })
             .sort({ createdAt: -1 }) //newest first
             .skip(Number(p) * 20)
             .limit(Number(limit))

@@ -1,6 +1,6 @@
 import express from 'express'
 import verifyAccessToken from '../middleware/auth.middleware.js'
-import { createGroupChat, getChat, getChats } from '../controller/chat.controller.js'
+import { createGroupChat, findChat, getChat, getChats } from '../controller/chat.controller.js'
 import { startMessage } from '../controller/message.controller.js'
 
 const router = express.Router()
@@ -9,5 +9,6 @@ router.post('/create/groupchat', verifyAccessToken, createGroupChat)
 router.get('/:id', getChat)
 router.post('/start', verifyAccessToken, startMessage)
 router.get('/', verifyAccessToken, getChats)
+router.get('/find/:id', verifyAccessToken, findChat) //user Id
 
 export default router

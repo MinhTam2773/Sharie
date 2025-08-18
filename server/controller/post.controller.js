@@ -38,6 +38,7 @@ export const uploadNewPost = async (req, res) => {
         res.status(200).json({ success: true, message: 'post uploaded successfully', newPost })
     } catch (err) {
         res.status(400).json({ success: false, message: `controller/uploadNewPost: ${err.message}` })
+        console.log(err.message)
     }
 }
 

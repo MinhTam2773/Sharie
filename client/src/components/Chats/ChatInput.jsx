@@ -1,10 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { FaPaperclip, FaTimes, FaPaperPlane, FaImage } from 'react-icons/fa';
-import { useChatStore } from '../../store/chatStore';
+import { getOtherUser, useChatStore } from '../../store/chatStore';
 import toast from 'react-hot-toast';
 
 const ChatInput = () => {
-    const { sendMessage } = useChatStore();
+    const { sendMessage, selectedChat, startMessage } = useChatStore();
     const [text, setText] = useState('');
     const [mediaPreview, setMediaPreview] = useState([]);
     const fileInputRef = useRef(null);
@@ -39,13 +39,19 @@ const ChatInput = () => {
         e.preventDefault();
         if (!text.trim() && mediaPreview.length === 0) return;
 
+        const otherUser = getOtherUser(selectedChat)
+
         for (const media of mediaPreview) {
-            const { message} = await sendMessage({ media: media.preview, mediaType: media.type });
+            const { message } = selectedChat._id
+                ? await sendMessage({ media: media.preview, mediaType: media.type })
+                : await startMessage(otherUser, { media: media.preview, mediaType: media.type });
             console.log(message)
         }
 
         if (text.trim()) {
-            const { message} = await sendMessage({ text: text.trim() });
+            const { message } = selectedChat._id
+                ? await sendMessage({ text: text.trim() })
+                : await startMessage(otherUser, { text: text.trim() });
             console.log(message)
         }
 
@@ -62,18 +68,18 @@ const ChatInput = () => {
                     {mediaPreview.map((media, index) => (
                         <div key={index} className="relative group">
                             {media.type === 'image' ? (
-                                <img 
-                                    src={media.preview} 
+                                <img
+                                    src={media.preview}
                                     className="h-20 w-20 object-cover rounded-lg border border-purple-400/30"
                                     alt="Preview"
                                 />
                             ) : (
-                                <video 
+                                <video
                                     src={media.preview}
                                     className="h-20 w-20 object-cover rounded-lg border border-purple-400/30"
                                 />
                             )}
-                            <button 
+                            <button
                                 onClick={() => removeMedia(index)}
                                 className="absolute -top-2 -right-2 bg-purple-600 rounded-full p-1 hover:bg-purple-500 transition-all group-hover:opacity-100 opacity-90"
                             >
@@ -93,11 +99,11 @@ const ChatInput = () => {
                     title="Attach media"
                 >
                     <FaPaperclip className="h-5 w-5" />
-                    <input 
-                        className="hidden" 
-                        type="file" 
-                        multiple 
-                        ref={fileInputRef} 
+                    <input
+                        className="hidden"
+                        type="file"
+                        multiple
+                        ref={fileInputRef}
                         onChange={handleMediaChange}
                         accept="image/*,video/*"
                     />
