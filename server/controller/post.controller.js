@@ -8,18 +8,18 @@ export const uploadNewPost = async (req, res) => {
         const userId = req.decoded.id
         const { caption, media } = req.body //
 
-        if (!caption && media.length == 0) {
+        if (!caption && media?.length == 0) {
             return res.status(401).json({ success: false, message: 'controller/uploadPost: please atleast have a caption' })
         }
 
         let mediaUrls = []
-        if (media.length > 0) {
+        if (media?.length > 0) {
             mediaUrls = await Promise.all(
                 media.map(async (item) => {
-    
-                    const uploadRes = item.type === 'image' 
+
+                    const uploadRes = item.type === 'image'
                         ? await cloudinary.uploader.upload(item.preview)
-                        : await cloudinary.uploader.upload(item.preview, {resource_type: 'video'})
+                        : await cloudinary.uploader.upload(item.preview, { resource_type: 'video' })
 
                     return { mediaUrl: uploadRes.secure_url, mediaType: item.type }
                 })
@@ -172,7 +172,6 @@ export const likePost = async (req, res) => {
             const updatedPost = await Post.findByIdAndUpdate(
                 postId,
                 {
-                    $inc: { likeCount: 1 },
                     $addToSet: { likes: currentUserId }
                 },
                 { new: true }
@@ -200,7 +199,6 @@ export const unlikePost = async (req, res) => {
             const updatedPost = await Post.findByIdAndUpdate(
                 postId,
                 {
-                    $inc: { likeCount: -1 },
                     $pull: { likes: currentUserId }
                 },
                 { new: true }
@@ -220,7 +218,9 @@ export const sharePost = async (req, res) => {
         const sharedPostId = req.params.id
         const { caption, media } = req.body
 
-        if (!(await Post.findById(sharedPostId))) {
+        const originalPost = await Post.findById(sharedPostId)
+
+        if (!originalPost) {
             return res.status(402).json({ success: false, message: "controller/sharePost: original post not found" })
         }
 
@@ -255,8 +255,65 @@ export const sharePost = async (req, res) => {
             }
         })
 
+        originalPost.shares.push(currentUserId)
+        await originalPost.save()
+
         res.status(200).json({ success: true, message: 'post shared successfully', newPost })
     } catch (e) {
         res.status(400).json({ success: true, message: `controller/sharePost: ${e.message}` })
+    }
+}
+
+export const repostPost = async (req, res) => {
+    try {
+        const currentUserId = req.decoded.id
+        const postId = req.params.id
+
+        if (!postId) return res.status(400).json({ success: false, message: 'postId not found' })
+
+        const originalPost = await Post.findById(postId)
+        if (!originalPost) return res.status(400).json({ success: false, message: 'original post not found' })
+
+        let newPost = await Post.create({
+            author: currentUserId,
+            originalPost: postId,
+            isReposted: true
+        })
+
+        newPost = await newPost.populate([
+            { path: 'author', select: 'avatar username nickname' },
+            {
+                path: 'originalPost',
+                populate: {
+                    path: 'author',
+                    select: '-password -email -__v -createdAt -updatedAt'
+                }
+            }
+        ]);
+
+        await Post.findByIdAndUpdate(
+            postId,
+            { $inc: { repostCount: 1 }, $push: { reposts: currentUserId } },
+            { new: true }
+        );
+
+
+        return res.status(200).json({ success: true, message: 'repost successfully', newPost })
+    } catch (e) {
+        console.log(e.message)
+    }
+}
+
+export const unRepost = async (req, res) => {
+    try {
+        const postId = req.params.id
+        const currentUserId = req.decoded.id
+        
+        await Post.findOneAndDelete({originalPost: postId, isReposted: true, author: currentUserId})
+
+        return res.status(200).json({success: true, message: 'unrepost successfully'})
+    } catch(e) {
+        console.log(e.message)
+        res.status(400).json({success: false, message: e.message})
     }
 }

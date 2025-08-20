@@ -54,6 +54,8 @@ export const usePostStore = create((set, get) => ({
 
             if (!res.data.success) return {success: false, message: res.data.message}
 
+            console.log(res.data.message)
+
             return { success: res.data.success, message: res.data.message }
         } catch (e) {
             console.error(e)
@@ -64,6 +66,8 @@ export const usePostStore = create((set, get) => ({
             const res = await api.post(`/posts/unlike/${postId}`)
 
             if (!res.data.success) return {success: false, message: res.data.message}
+
+            console.log(res.data.message)
 
             return { success: res.data.success, message: res.data.message }
         } catch (e) {
@@ -111,6 +115,37 @@ export const usePostStore = create((set, get) => ({
             return { success: true, message: res.data.message }
         } catch (e) {
             console.error(e)
+        }
+    },
+    repost: async (postId) => {
+        try {
+            const res =  await api.post(`/posts/repost/${postId}`)
+
+            if (!res.data.success) {
+                console.log(res.data.message)
+                return
+            }
+
+            console.log(res.data.message)
+
+            return {success: true, message: res.data.message}
+        } catch(e) {
+            console.error(e)
+        }
+    },
+    unRepost: async (postId) => {
+        try {
+            const res = await api.delete(`/posts/unrepost/${postId}`)
+
+            if (!res.data.success) {
+                console.log(res.data.message)
+                return
+            }
+
+            console.log(res.data.message)
+            return {success: true}
+        } catch(e) {
+            console.log(e.message)
         }
     }
 }))

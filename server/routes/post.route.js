@@ -1,5 +1,5 @@
 import express from 'express'
-import { adjustPost, deletePost, getPost, getPostsFromFollowing, getPostsFromUser, likePost, sharePost, unlikePost, uploadNewPost } from '../controller/post.controller.js'
+import { adjustPost, deletePost, getPost, getPostsFromFollowing, getPostsFromUser, likePost, repostPost, sharePost, unlikePost, unRepost, uploadNewPost } from '../controller/post.controller.js'
 import verifyAccessToken from '../middleware/auth.middleware.js'
 import { getCommentsByPost } from '../controller/comment.controller.js'
 
@@ -15,5 +15,7 @@ router.post('/like/:id', verifyAccessToken, likePost)
 router.post('/unlike/:id', verifyAccessToken, unlikePost)
 router.post('/share/:id', verifyAccessToken, sharePost)
 router.get('/:id/comments', verifyAccessToken, getCommentsByPost)
+router.post('/repost/:id', verifyAccessToken, repostPost)
+router.delete('/unrepost/:id', verifyAccessToken, unRepost)
 
 export default router

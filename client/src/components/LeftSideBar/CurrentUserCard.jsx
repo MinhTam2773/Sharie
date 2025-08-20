@@ -68,7 +68,7 @@ const CurrentUserCard = () => {
     if (isGettingCurrentUser && !user) return <p>Loading...</p>
 
     return (
-        <div className="p-4 fixed">
+        <div className="p-4 mt-18 fixed w-90">
             {user && (
                 <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-md p-6 flex flex-col items-center w-5/6">
                     <img src={user.avatar} alt="avatar" className="w-20 h-20 rounded-full object-cover shadow" />

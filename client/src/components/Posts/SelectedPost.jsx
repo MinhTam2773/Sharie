@@ -10,11 +10,10 @@ import { forwardRef } from 'react';
 
 const SelectedPost = forwardRef(({
     post,
-    user,
     likeCount,
-    likes,
     handleLikeButton,
     setIsOpen,
+    hasLiked
 }, ref) => {
     const { getCommentsByPost } = usePostStore()
 
@@ -63,7 +62,7 @@ const SelectedPost = forwardRef(({
                     {/* likes and shares */}
                     <div className='flex gap-7 content-center px-2 mt-2'>
                         <div className='flex'>
-                            <button type='button' className={`p-1 `} onClick={() => handleLikeButton()}><FaRegHeart className={`${likes.includes(user._id) ? 'fill-red-400' : ''}`} /></button>
+                            <button type='button' className={`p-1 `} onClick={() => handleLikeButton()}><FaRegHeart className={`${hasLiked ? 'fill-red-400' : ''}`} /></button>
                             <span>{likeCount}</span>
                         </div>
                         <div className='flex'>

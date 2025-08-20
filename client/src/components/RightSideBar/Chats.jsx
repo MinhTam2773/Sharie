@@ -15,7 +15,7 @@ const Chats = () => {
     if (chats.length == 0) return <p>get some friends</p>
 
     return (
-        <div className='fixed right-0 w-80 top-16'>
+        <div className='fixed right-0 w-80 top-20'>
             {chats.map((chat) => {
                 const otherUser = getOtherUser(chat);
                 const chatImage = chat.isGroup ? chat.groupAvatar : otherUser.avatar
