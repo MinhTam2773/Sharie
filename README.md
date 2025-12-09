@@ -55,5 +55,3 @@ A full-stack social media platform for sharing content, connecting with others, 
 - **dotenv** - Environment variables
 - **Postman** - API testing
 - **Render/Vercel** - Deployment options
-
-## 📁 Project Structure
