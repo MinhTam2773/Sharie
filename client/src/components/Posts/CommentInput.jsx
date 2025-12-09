@@ -5,10 +5,12 @@ import { MdClose } from 'react-icons/md'
 import toast from 'react-hot-toast'
 import { PiPaperPlaneRightFill } from "react-icons/pi";
 import { usePostStore } from '../../store/postStore'
+import { useAudioStore } from '../../store/audioStore'
 
-const CommentInput = ({ postId , setComments}) => {
+const CommentInput = ({ refId ,refModel, setComments}) => {
   const { user } = useAuthStore()
-  const { uploadComment, getCommentsByPost } = usePostStore()
+  const { uploadCommentPost, getCommentsByPost } = usePostStore()
+  const {uploadCommentAudio} = useAudioStore()
 
   const [text, setText] = useState('')
   const [media, setMedia] = useState([])
@@ -46,9 +48,9 @@ const CommentInput = ({ postId , setComments}) => {
   const handleUploadComment = async () => {
     if (!text.trim() && media.length == 0) return
 
-    await uploadComment(postId, {text, media})
+    refModel === 'Post' ? await uploadCommentPost(refId, {text, media}) : await uploadCommentAudio(refId, {text, media})
 
-    const {comments} = await getCommentsByPost(postId)
+    const {comments} = await getCommentsByPost(refId)
     setComments(comments)
     setText('')
     setMedia([])

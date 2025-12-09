@@ -22,7 +22,7 @@ export const uploadNewPost = async (req, res) => {
                         : await cloudinary.uploader.upload(item.preview, { resource_type: 'video' })
 
                     return { mediaUrl: uploadRes.secure_url, mediaType: item.type }
-                })
+                }) 
             )
         }
 
@@ -90,11 +90,42 @@ export const getPostsFromUser = async (req, res) => {
     try {
         const userId = req.params.id
 
-        const posts = await Post.find()
-        const postsFromUser = posts.filter((post) => (String(post.authorId) === String(userId)))
+        const posts = await Post.find({ author: userId, isReposted: false })
+            .populate('author', 'avatar username nickname')
+            .populate({
+                path: 'originalPost',
+                populate: {
+                    path: 'author',
+                    model: 'User',
+                    select: '-password -email -__v -createdAt -updatedAt'
+                }
+            })
 
-        res.status(200).json({ success: true, message: "get posts from user successfully", postsFromUser })
+        res.status(200).json({ success: true, message: "get posts from user successfully", posts: posts.reverse() })
     } catch (err) {
+        console.log(err.message)
+        res.status(400).json({ success: false, message: `controller/getPostsFromFollowing: ${err.message}` })
+    }
+}
+
+export const getRepostsFromUser = async (req, res) => {
+    try {
+        const userId = req.params.id
+
+        const posts = await Post.find({ reposts: { $in: [userId] } })
+            .populate('author', 'avatar username nickname')
+            .populate({
+                path: 'originalPost',
+                populate: {
+                    path: 'author',
+                    model: 'User',
+                    select: '-password -email -__v -createdAt -updatedAt'
+                }
+            })
+
+        res.status(200).json({ success: true, message: "get posts from user successfully", posts: posts.reverse() })
+    } catch (err) {
+        console.log(err.message)
         res.status(400).json({ success: false, message: `controller/getPostsFromFollowing: ${err.message}` })
     }
 }
@@ -308,12 +339,12 @@ export const unRepost = async (req, res) => {
     try {
         const postId = req.params.id
         const currentUserId = req.decoded.id
-        
-        await Post.findOneAndDelete({originalPost: postId, isReposted: true, author: currentUserId})
 
-        return res.status(200).json({success: true, message: 'unrepost successfully'})
-    } catch(e) {
+        await Post.findOneAndDelete({ originalPost: postId, isReposted: true, author: currentUserId })
+
+        return res.status(200).json({ success: true, message: 'unrepost successfully' })
+    } catch (e) {
         console.log(e.message)
-        res.status(400).json({success: false, message: e.message})
+        res.status(400).json({ success: false, message: e.message })
     }
 }

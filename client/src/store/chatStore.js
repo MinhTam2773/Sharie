@@ -32,7 +32,7 @@ export const useChatStore = create((set, get) => ({
             return { success: true, message: res.data.message }
         } catch (e) {
             console.error(e)
-            return {message: e.message}
+            return { message: e.message }
         }
     },
     getChats: async () => {
@@ -52,6 +52,7 @@ export const useChatStore = create((set, get) => ({
         }
     },
     getRecentMessages: async (chatId) => {
+        const { user } = useAuthStore.getState()
         if (!chatId) {
             set({ messages: [] })
             return
@@ -63,6 +64,17 @@ export const useChatStore = create((set, get) => ({
             if (!res.data.success) return { success: false, message: res.data.message }
 
             set({ messages: res.data.messages })
+
+            //update seen message in main screen
+            const updatedChats = get().chats.map(chat => {
+                if (chat._id === chatId) {
+                    chat.lastMessage?.seenBy.push(user._id)
+                    return chat
+                }
+                return chat
+            })
+            set({ chats: updatedChats })
+
             return { success: true, message: res.data.message }
         } catch (e) {
             console.error(e)
@@ -76,7 +88,7 @@ export const useChatStore = create((set, get) => ({
         try {
             set({ isLoadingMoreMessages: true })
 
-            const res = await api.get(`/api/messages/${selectedChat._id}?p=${page}&limit=20`)
+            const res = await api.get(`/messages/${selectedChat._id}?p=${page}&limit=20`)
             if (!res.data.success) return { success: false, message: res.data.message }
 
             set({ messages: [...res.data.messages, ...messages] })
@@ -89,21 +101,56 @@ export const useChatStore = create((set, get) => ({
     },
     subcribeToMessage: () => {
         try {
-            if (!get().selectedChat) return
+            useAuthStore.getState().socket.on('newMessage', async (newMessage) => {
+                const { user } = useAuthStore.getState()
 
-            useAuthStore.getState().socket.on('newMessage', (newMessage) => {
-                if (get().selectedChat._id !== newMessage.chatId) return
+                // check if chat exists
+                const existingChats = get().chats
+                const chatExists = existingChats.some(chat => chat._id.toString() === newMessage.chatId.toString())
 
-                set({ messages: [...get().messages, newMessage] })
-                console.log('new message found')
+                if (!chatExists) {
+                    const res = await api.post(`/chats/${newMessage.chatId}`)
+                    set({ chats: [res.data.chat, ...existingChats] })
+                } else {
+                    const updatedChats = existingChats.map(chat =>
+                        chat._id.toString() === newMessage.chatId.toString()
+                            ? { ...chat, lastMessage: newMessage }
+                            : chat
+                    )
+                    set({ chats: updatedChats })
+                }
+                
+                // update messages if chat is open
+                if (get().selectedChat?._id?.toString() === newMessage.chatId.toString()) {
+                    const res = await api.put(`/messages/adjust/${newMessage._id}`, { ...newMessage, seenBy: [...newMessage.seenBy, user._id] })
+
+                    //mark as seen
+                    const updatedChats = get().chats.map(chat => {
+                        if (chat._id === newMessage.chatId) {
+                            return {
+                                ...chat,
+                                lastMessage: {
+                                    ...chat.lastMessage,
+                                    seenBy: [...chat.lastMessage.seenBy, user._id]
+                                }
+                            }
+                        }
+                        return chat
+                    })
+
+                    set({ chats: updatedChats })
+                    set({ messages: [...get().messages, res.data.newMessage] })
+                }
+
             })
+
         } catch (e) {
             console.error(e)
         }
     },
     unSubscribeToMessage: () => {
         try {
-            useAuthStore.getState().socket.off("newMessage")
+            useAuthStore.getState().socket?.off("newMessage")
         } catch (e) {
             console.error(e)
         }
@@ -135,7 +182,7 @@ export const useChatStore = create((set, get) => ({
             set({ selectedChat: null, messages: [] })
         }
         else set({ selectedChat: { ...chat, chatImage, chatName } })
-    }
+    },
 }))
 
 export const getOtherUser = (chat) => {

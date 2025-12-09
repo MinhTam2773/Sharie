@@ -7,7 +7,7 @@ const router = express.Router()
 router.get('/me', verifyAccessToken , getCurrentUser)
 router.post('/follow/:id', verifyAccessToken, follow)
 router.delete('/unfollow/:id', verifyAccessToken, unfollow)
-router.get('/:username', verifyAccessToken, getTargetUser)
+router.get('/:username', getTargetUser)
 router.put('/me', verifyAccessToken, updateCurrentUser)
 
 export default router

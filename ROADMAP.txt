@@ -1,4 +1,10 @@
 Sharie Full-Stack Roadmap
+finish interactive buttons for audio, {make audio modal} <== , implement skip and go back to other audio in collection
+comment reply functionality
+original post in shared stuff
+notification functionality
+
+
 ✅ 1. Project Setup
  Create Git repo (sharie)
 

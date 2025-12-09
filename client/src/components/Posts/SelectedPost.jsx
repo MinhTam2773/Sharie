@@ -89,7 +89,7 @@ const SelectedPost = forwardRef(({
                         )}
                     </div>
                 </div>
-                <CommentInput postId={post._id} setComments={setComments} />
+                <CommentInput refId={post._id} refModel={'Post'} setComments={setComments} />
             </div>
         </div>
     )

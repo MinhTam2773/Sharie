@@ -33,7 +33,8 @@ export const startMessage = async (req, res) => {
             mediaType,
             mediaUrl,
             sender: currentUserId,
-            chatId: chat._id
+            chatId: chat._id,
+            seenBy: [currentUserId]
         })
 
         chat.lastMessage = newMessage._id
@@ -44,7 +45,6 @@ export const startMessage = async (req, res) => {
         const receiverSocketIds = getReceiverSocketId(chat.participants)
         receiverSocketIds?.forEach((socketId) => {
             io.to(socketId).emit('newMessage', newMessage)
-            console.log('new Message sent from', currentUserId)
         })
 
         res.status(200).json({ success: true, message: "start chat successfully", chatId: chat._id })
@@ -84,7 +84,8 @@ export const sendMessage = async (req, res) => {
             mediaType,
             mediaUrl,
             sender: currentUserId,
-            chatId: chat._id
+            chatId: chat._id,
+            seenBy: [currentUserId]
         })
 
         newMessage = await newMessage.populate('sender', 'username avatar')
@@ -106,22 +107,29 @@ export const sendMessage = async (req, res) => {
 
 export const getMessages = async (req, res) => {
     try {
+        const currentUserId = req.decoded.id
         const chatId = req.params.id
         const { p = 0, limit = 20 } = req.query
+
+        await Message.updateMany(
+            {chatId, seenBy: { $ne: currentUserId}},
+            {$addToSet: { seenBy: currentUserId } }
+        )
 
         const messages = await Message.find({ chatId })
             .sort({ createdAt: -1 }) //newest first
             .skip(Number(p) * 20)
             .limit(Number(limit))
             .populate('sender', 'username avatar')
+            .populate('seenBy', 'avatar nickname')
 
         if (messages.length == 0) {
-            return res.status(401).json({ success: false, message: 'controller/getMessages: no messages found' })
+            throw new Error('no messages found')
         }
 
         res.status(200).json({ success: true, message: 'get chat successfully', messages: messages.reverse() })
     } catch (e) {
-        res.status(400).json({ success: false, message: `controller/getMessages: ${e.message}` })
+        console.log(e.message)
     }
 }
 
@@ -150,5 +158,27 @@ export const likeMessage = async (req, res) => {
 
     } catch (e) {
         res.status(400).json({ success: false, message: `controller/likeMessage: ${e.message}` })
+    }
+}
+
+export const adjustMessage = async (req, res) => {
+    try {
+        const messageId = req.params.id
+        const adjustedMessage = req.body
+
+        if (!messageId) throw new Error('messageId not found')
+        
+        const message = await Message.findByIdAndUpdate(
+            messageId, 
+            {$set: {...adjustedMessage}},
+            {new: true}
+        )
+
+        if (!message) throw new Error('message not found in db')
+        
+        return res.status(200).json({success: true, message: 'message adjusted', newMessage: message})
+    } catch(e) {
+        console.log(e.message)
+        return res.status(400).json({success: false, message: e.message})
     }
 }

@@ -10,6 +10,8 @@ import commentRouter from './routes/comment.route.js'
 import chatRouter from './routes/chat.route.js'
 import messageRouter from './routes/message.route.js'
 import searchRouter from './routes/search.js'
+import audioRouter from './routes/audio.route.js'
+import collectionRouter from './routes/collection.route.js'
 import { app, io, server } from './lib/socket.js'
 
 dotenv.config()
@@ -32,6 +34,8 @@ app.use('/api/comments', commentRouter)
 app.use('/api/chats', chatRouter)
 app.use('/api/messages', messageRouter)
 app.use('/api/search', searchRouter)
+app.use('/api/audios', audioRouter)
+app.use('/api/collections', collectionRouter)
 
 //db
 server.listen(PORT, () => {

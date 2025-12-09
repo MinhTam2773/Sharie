@@ -9,6 +9,7 @@ export const usePostStore = create((set, get) => ({
     loadingPosts: false,
     isGettingComments: false,
     isUploadingComment: false,
+    isGettingPostFromUser: false,
 
     uploadPost: async (formData) => {
         try {
@@ -89,7 +90,7 @@ export const usePostStore = create((set, get) => ({
             set({ isGettingComments: false })
         }
     },
-    uploadComment: async (postId, formData) => {
+    uploadCommentPost: async (postId, formData) => {
         try {
             set({ isUploadingComment: true })
 
@@ -147,5 +148,31 @@ export const usePostStore = create((set, get) => ({
         } catch(e) {
             console.log(e.message)
         }
-    }
+    },
+    getPostsFromUser: async (userId) => {
+        try {
+            set({isGettingPostFromUser: true})
+
+            const res = await api.get(`/posts/profile/${userId}`)
+            
+            return res.data.posts
+        } catch(e) {
+            console.log(e.message)
+        } finally {
+            set({isGettingPostFromUser: false})
+        }
+    },
+    getRepostsFromUser: async (userId) => {
+        try {
+            set({isGettingPostFromUser: true})
+
+            const res = await api.get(`/posts/profile/reposts/${userId}`)
+            
+            return res.data.posts
+        } catch(e) {
+            console.log(e.message)
+        } finally {
+            set({isGettingPostFromUser: false})
+        }
+    },
 }))

@@ -2,11 +2,7 @@ import mongoose from "mongoose";
 import { MediaSchema } from "./media.model.js";
 
 const commentSchema = new mongoose.Schema({
-    postId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Post',
-        required: true
-    },
+    refId: { type: mongoose.Schema.Types.ObjectId, required: true },
     commentor: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

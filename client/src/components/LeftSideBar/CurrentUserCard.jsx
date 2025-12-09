@@ -4,10 +4,15 @@ import toast from 'react-hot-toast'
 import { FaPaperclip } from 'react-icons/fa'
 import { usePostStore } from '../../store/postStore'
 import { MdClose } from 'react-icons/md'
+import AudioUploadModal from '../Audios/AudioUploadModal'
+import { useUIStore } from '../../store/UIstore'
+import { Backdrop } from '../Backdrop'
 
 const CurrentUserCard = () => {
     const { user, isGettingCurrentUser } = useAuthStore()
+    const {audioUploadModelOpen, setAudioUploadModelOpen} = useUIStore()
     const { uploadPost } = usePostStore()
+    const {setIsFocused} = useUIStore()
 
     const [isOpen, setIsOpen] = useState(false)
     const [caption, setCaption] = useState('')
@@ -59,6 +64,7 @@ const CurrentUserCard = () => {
         const handleClickOutside = (e) => {
             if (uploadPostRef.current && !uploadPostRef.current.contains(e.target)) {
                 setIsOpen(false)
+                setIsFocused(false)
             }
         }
         document.addEventListener('mousedown', handleClickOutside)
@@ -68,7 +74,9 @@ const CurrentUserCard = () => {
     if (isGettingCurrentUser && !user) return <p>Loading...</p>
 
     return (
-        <div className="p-4 mt-18 fixed w-90">
+        <div className="p-4 mt-18 w-90">
+
+            {/* User Card */}
             {user && (
                 <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-md p-6 flex flex-col items-center w-5/6">
                     <img src={user.avatar} alt="avatar" className="w-20 h-20 rounded-full object-cover shadow" />
@@ -77,16 +85,27 @@ const CurrentUserCard = () => {
                         {user.bio}
                     </p>
                     <button
-                        onClick={() => setIsOpen(true)}
+                        onClick={() => {
+                            setIsOpen(true)
+                            setIsFocused(true)
+                        }}
                         className="mt-7 bg-gradient-to-r from-purple-500 to-indigo-500 hover:opacity-90 text-white px-5 py-2 rounded-full transition"
                     >
                         Upload Post
                     </button>
+                    <button
+                        onClick={() => setAudioUploadModelOpen(true)}
+                        className="mt-5 bg-gradient-to-r from-purple-500 to-indigo-500 hover:opacity-90 text-white px-5 py-2 rounded-full transition"
+                    >
+                        Upload Audio
+                    </button>
                 </div>
             )}
 
+            {/* Upload Post Modal */}
+            <Backdrop className='z-0'/>
             {isOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="fixed inset-0 flex items-center justify-center z-10">
                     <form
                         ref={uploadPostRef}
                         onSubmit={handleUploadPost}
@@ -146,7 +165,10 @@ const CurrentUserCard = () => {
                             <div className="space-x-2">
                                 <button
                                     type="button"
-                                    onClick={() => setIsOpen(false)}
+                                    onClick={() => {
+                                        setIsOpen(false)
+                                        setIsFocused(false)
+                                    }}
                                     className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-800 rounded-md"
                                 >
                                     Cancel
@@ -161,6 +183,11 @@ const CurrentUserCard = () => {
                         </div>
                     </form>
                 </div>
+            )}
+
+            {/* Upload Audio Modal */}
+            {audioUploadModelOpen && (
+                <AudioUploadModal />
             )}
         </div>
     )

@@ -1,11 +1,22 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useUserStore } from '../../store/userStore'
 import ButtonsInProfile from './ButtonsInProfile'
+import Posts from './TabsContent/Posts'
+import Musics from './TabsContent/Musics'
+import Reposts from './TabsContent/Reposts'
 
 const Profile = () => {
     const { getTargetUser, selectedUser, isGettingTargetUser } = useUserStore()
     const { username } = useParams()
+
+    const [activeTab, setActiveTab] = useState('Posts')
+
+    const tabs = [
+        { id: 'Posts', label: 'Posts' },
+        { id: 'Music', label: 'Music' },
+        { id: 'Reposts', label: 'Reposts' }
+    ]
 
     useEffect(() => {
         if (username) {
@@ -25,7 +36,7 @@ const Profile = () => {
         <div className="p-6 w-full mx-auto ">
             {/* Background image */}
             {selectedUser.backgroundImage && (
-                <div className="w-full h-48 rounded-lg overflow-hidden mb-4">
+                <div className="w-full h-48 rounded-lg overflow-hidden mb-4 mt-17">
                     <img
                         src={selectedUser.backgroundImage}
                         alt={`${selectedUser.username}'s background`}
@@ -58,11 +69,36 @@ const Profile = () => {
             </div>
 
             {/* Bio */}
-            <p className="text-gray-700 dark:text-gray-300 mt-24 sm:mt-32 px-3">
-                {selectedUser.bio ? selectedUser.bio : '' }
+            <p className="text-white dark:text-gray-300 mt-24 sm:mt-32 px-3">
+                {selectedUser.bio ? selectedUser.bio : ''}
             </p>
 
-            <ButtonsInProfile/>
+            <ButtonsInProfile />
+
+            <div className="flex justify-center text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:text-gray-400 dark:border-gray-700">
+                <ul className="flex flex-wrap -mb-px">
+                    {/* tab headers */}
+                    {tabs.map(tab => (
+                        <li
+                            key={tab.id}
+                            className="me-2"
+                            onClick={() => setActiveTab(tab.id)}
+                        >
+                            <a className={`${tab.id === activeTab ? 'text-blue-600 border-b-2 border-blue-600 rounded-t-lg active dark:text-blue-500 dark:border-blue-500' : 'hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300'} inline-block p-4 border-b-2 border-transparent rounded-t-lg select-none`}>
+                                {tab.label}
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+            {/* tab content */}
+            <div>
+                {activeTab === 'Posts' && (<Posts userId={selectedUser._id}/>)} 
+                {activeTab === 'Music' && (<Musics/>)} 
+                {activeTab === 'Reposts' && (<Reposts userId={selectedUser._id}/>)} 
+            </div>
+
         </div>
     )
 }

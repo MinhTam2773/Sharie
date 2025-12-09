@@ -22,13 +22,13 @@ const Post = ({ post }) => {
   )
   const [hasLiked, setHasLiked] = useState(
     post.isReposted
-      ? post.originalPost?.likes.some(id => id.toString() === user._id.toString())
-      : post.likes.some(id => id.toString() === user._id.toString())
+      ? post.originalPost?.likes?.some(id => id.toString() === user._id.toString())
+      : post.likes.some(id => id.toString() === user?._id.toString())
   )
 
   const [reposted, setReposted] = useState(
     post.isReposted
-      ? post.originalPost?.reposts.some(id => id.toString() === user._id.toString())
+      ? post.originalPost?.reposts?.some(id => id.toString() === user._id.toString())
       : post.reposts?.some(id => id.toString() === user._id.toString())
   )
   const [repostCount, setRepostCount] = useState(
@@ -93,19 +93,23 @@ const Post = ({ post }) => {
 
   return (
     <div className='w-5/6 mx-auto bg-gray-800 flex flex-col rounded-2xl'>
+
       {post.isReposted && (
         <div className='px-10 pt-1 '>
           <p className='text-gray-500 flex gap-1 items-center' onClick={() => handleNavigate(post.author)}>
             <BiRepost className='size-5' /> <span className='hover:underline font-semibold cursor-pointer'>{post.author.username}</span> reposted</p>
         </div>
       )}
+      {post.isReposted && !post.originalPost && (
+        <div>Post unavailable</div>
+      )}
       <div onClick={() => setIsOpen(true)}>
 
 
         {/* username  */}
         <div className='flex  gap-3 p-3'>
-          <img src={post.isReposted ? post.originalPost?.author.avatar : post.author.avatar} alt={`${post.author.username}'s avatar`} className='h-10 w-10 rounded-full cursor-pointer' onClick={() => handleNavigate(post.author)} />
-          <p className='font-semibold cursor-pointer hover:underline' onClick={() => handleNavigate(post.isReposted ? post.originalPost?.author : post.author)}>{post.isReposted ? post.originalPost?.author.username : post.author.username}</p>
+          <img src={post.isReposted ? post.originalPost?.author?.avatar : post.author.avatar} alt={`${post.author.username}'s avatar`} className='h-10 w-10 rounded-full cursor-pointer' onClick={() => handleNavigate(post.author)} />
+          <p className='font-semibold cursor-pointer hover:underline' onClick={() => handleNavigate(post.isReposted ? post.originalPost?.author : post.author)}>{post.isReposted ? post.originalPost?.author?.username : post.author?.username}</p>
         </div>
 
         {/* caption */}
@@ -118,7 +122,7 @@ const Post = ({ post }) => {
         {/* media */}
         {post.isReposted ? (
           <div>
-            {post.originalPost?.media.length > 0 && (
+            {post.originalPost?.media?.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 p-3">
                 {post.originalPost.media.map((media, index) => (
                   <div key={index} className=" rounded-lg overflow-hidden bg-black">
@@ -265,7 +269,7 @@ const Post = ({ post }) => {
               setIsSharing(true)
             }}>
             <button className='cursor-pointer'><FaShare /></button>
-            <span>{post.isReposted ? post.originalPost?.shares.length : post.shares.length}</span>
+            <span>{post.isReposted ? post.originalPost?.shares?.length : post.shares?.length}</span>
           </div>
         </div>
       </div>

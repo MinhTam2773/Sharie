@@ -6,7 +6,7 @@ import { startMessage } from '../controller/message.controller.js'
 const router = express.Router()
 
 router.post('/create/groupchat', verifyAccessToken, createGroupChat)
-router.get('/:id', getChat)
+router.get('/:id',verifyAccessToken, getChat)
 router.post('/start', verifyAccessToken, startMessage)
 router.get('/', verifyAccessToken, getChats)
 router.get('/find/:id', verifyAccessToken, findChat) //user Id

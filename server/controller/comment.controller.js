@@ -1,23 +1,18 @@
 import cloudinary from "../lib/cloudinary.js";
 import Comment from "../model/comment.model.js";
 import Post from "../model/post.model.js";
+import { Audio } from "../model/audio.model.js";
 
 export const uploadComment = async (req, res) => {
     try {
         const currentUserId = req.decoded.id
-        const postId = req.params.id
-        const { text, media } = req.body
+        const refId = req.params.id
+        const { text, media } = req.body //media = [{mediaType, mediaPreview},...]
 
-        //media = [{mediaType, mediaPreview},...]
-
-        const post = await Post.findById(postId)
-
-        if (!post) {
-            return res.status(403).json({ success: false, message: 'controller/uploadComment: post not found' })
-        }
+        const entity = await Post.findById(refId) || await Audio.findById(refId)
 
         if (!text && media.length == 0) {
-            return res.status(401).json({ success: false, message: 'controller/uploadComment: please atleast have a caption' })
+            return res.status(401).json({ success: false, message: 'controller/uploadComment: please at least have a caption' })
         }
 
         let mediaUrls = []
@@ -30,9 +25,8 @@ export const uploadComment = async (req, res) => {
             )
         }
 
-
         const newComment = await Comment.create({
-            postId,
+            refId,
             commentor: currentUserId,
             text,
             media: mediaUrls
@@ -42,8 +36,51 @@ export const uploadComment = async (req, res) => {
             return res.status(403).json({ success: false, message: 'controller/uploadComment: can not upload comment' })
         }
 
-        post.commentCount += 1
-        await post.save()
+        entity.commentCount += 1
+        await entity.save()
+
+        res.status(200).json({ successL: true, message: "upload comment successfully", newComment })
+    } catch (e) {
+        console.log(e.message)
+        res.status(400).json({ success: false, message: `controller/uploadComment: ${e.message}` })
+    }
+}
+
+export const uploadCommentAudio = async (req, res) => {
+        try {
+        const currentUserId = req.decoded.id
+        const audioId = req.params.id
+        const { text, media } = req.body //media = [{mediaType, mediaPreview},...]
+
+        if (!audioId) {
+            return res.status(403).json({ success: false, message: 'controller/uploadComment: post not found' })
+        }
+        
+        const audio = await Audio.findById(audioId)
+
+        if (!text && media.length == 0) {
+            return res.status(401).json({ success: false, message: 'controller/uploadComment: please at least have a caption' })
+        }
+
+        let mediaUrls = []
+        if (media.length > 0) {
+            mediaUrls = await Promise.all(
+                media.map(async (item) => {
+                    const uploadRes = await cloudinary.uploader.upload(item.preview)
+                    return { mediaUrl: uploadRes.secure_url, mediaType: item.type }
+                })
+            )
+        }
+
+        const newComment = await Comment.create({
+            audioId,
+            commentor: currentUserId,
+            text,
+            media: mediaUrls
+        })
+
+        audio.commentCount += 1
+        await audio.save()
 
         res.status(200).json({ successL: true, message: "upload comment successfully", newComment })
     } catch (e) {
@@ -132,10 +169,10 @@ export const getComment = async (req, res) => {
     }
 }
 
-export const getCommentsByPost = async (req, res) => {
+export const getComments = async (req, res) => {
     try {
-        const postId = req.params.id
-        const comments = await Comment.find({ postId }).populate('commentor', 'avatar username')
+        const refId = req.params.id 
+        const comments = await Comment.find({ refId }).populate('commentor', 'avatar username')
 
         res.status(200).json({ success: true, message: "get comments by post successfully", comments })
     } catch (e) {

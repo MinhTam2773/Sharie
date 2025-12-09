@@ -42,7 +42,6 @@ export const getChat = async (req, res) => {
             return res.status(403).json({ success: false, message: 'controller/getChat: chat not found' })
         }
 
-
         res.status(200).json({ success: true, participants: chat.participants, lastmessage: chat.lastMessage, chat })
     } catch (e) {
         res.status(400).json({ success: false, message: `controller/getChat: ${e.message}` })

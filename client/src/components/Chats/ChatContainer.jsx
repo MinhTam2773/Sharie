@@ -10,8 +10,6 @@ const ChatContainer = () => {
   const {
     getRecentMessages,
     messages,
-    subcribeToMessage,
-    unSubscribeToMessage,
     loadMoreMessages,
     isGettingMessages,
     selectedChat
@@ -26,9 +24,7 @@ const ChatContainer = () => {
 
   useEffect(() => {
     getRecentMessages(selectedChat._id);
-    subcribeToMessage();
-    return () => unSubscribeToMessage();
-  }, [selectedChat]);
+  }, []);
 
   useEffect(() => {
     if (shouldScrollRef.current) messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -71,23 +67,24 @@ const ChatContainer = () => {
           const isSelf = message.sender._id === user._id;
           const prevMessage = index > 0 ? messages[index - 1] : null;
           const isSameSenderAsPrev = prevMessage?.sender._id === message.sender._id;
+          const nextMessage = index === (messages.length - 1) ? null : messages[index + 1]
 
           return (
             <React.Fragment key={message._id} >
               {!isSameSenderAsPrev && (
-                <div className="w-full border-t border-purple-700/40 my-2"></div>
+                <div className="w-full border-t border-purple-700/40 my-1"></div>
               )}
 
               <div
-                className={`flex w-full ${isSelf ? 'justify-end' : 'justify-start'} ${isSameSenderAsPrev ? 'mt-0.5' : 'mt-6'
+                className={`flex w-full ${isSelf ? 'justify-end' : 'justify-start'} ${isSameSenderAsPrev ? 'mt-0.5' : 'mt-3'
                   }`}
               >
                 <div ref={messageEndRef}
                   className={`
-            max-w-[65%] text-sm sm:text-base break-words px-4 py-2 shadow-md
-            ${isSelf ? 'bg-indigo-600 text-white' : 'bg-purple-800 text-purple-100'}
-            ${isSameSenderAsPrev ? 'rounded-tl-md rounded-tr-md rounded-b-md' : 'rounded-2xl'}
-          `}
+                    max-w-[65%] text-sm sm:text-base break-words px-4 py-2 shadow-md
+                    ${isSelf ? 'bg-indigo-600 text-white' : 'bg-purple-800 text-purple-100'}
+                    ${isSameSenderAsPrev ? 'rounded-tl-md rounded-tr-md rounded-b-md' : 'rounded-2xl'}
+                  `}
                 >
                   {message.text && (
                     <div className="whitespace-pre-line">{message.text}</div>
@@ -110,6 +107,30 @@ const ChatContainer = () => {
                     </>
                   )}
                 </div>
+              </div>
+
+              {/* seen */}
+              <div className={`${message.sender._id === user._id ? 'justify-end' : '' } flex  gap-1 mt-1`}>
+                {selectedChat.participants.map((participant) => {
+                  if (participant._id !== user._id && participant._id !== message.sender._id) {
+                    const hasSeenThis = message.seenBy.some(user => user._id === participant._id);
+  
+                    const hasSeenNext = nextMessage?.seenBy.some(user => user._id === participant._id);
+  
+                    // Only show if user saw THIS message but not the next one
+                    if (hasSeenThis && !hasSeenNext) {
+                      return (
+                        <img
+                          key={participant._id}
+                          src={participant.avatar}
+                          className={` rounded-full h-5 w-5`}
+                          alt={participant.nickname}
+                        />
+                      );
+                    }
+                    return null;
+                  }
+                })}
               </div>
             </React.Fragment>
           );
